@@ -1,0 +1,1374 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>아메리카 대륙 마스터 - 지리 탐구</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- D3.js -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
+        
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #ffffff;
+            color: #1c1917; 
+        }
+
+        #map-container {
+            background-color: #f5f5f4; 
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .country {
+            stroke: #ffffff;
+            stroke-width: 0.5px;
+            transition: fill 0.4s ease, opacity 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .country:hover {
+            opacity: 0.8;
+            stroke-width: 1.5px;
+            stroke: #a8a29e;
+        }
+        
+        /* 상태별 색상 강조 */
+        .country.active {
+            fill: #292524 !important;
+            stroke: #ffffff;
+            stroke-width: 1px;
+            z-index: 10;
+        }
+        
+        .country.correct { fill: #15803d !important; }
+        .country.wrong { fill: #b91c1c !important; }
+
+        /* 월드컵 같은 조 국가 */
+        .country.wc-group-active { fill: #0f766e !important; }
+
+        /* 배틀 상대 국가 (각기 다른 색상) */
+        .country.battle-target-0 { fill: #b91c1c !important; } 
+        .country.battle-target-1 { fill: #1d4ed8 !important; } 
+        .country.battle-target-2 { fill: #b45309 !important; } 
+
+        .battle-winner {
+            transform: scale(1.05);
+            border: 2px solid #292524;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            transition: all 0.4s ease;
+            z-index: 10;
+        }
+        .battle-loser {
+            opacity: 0.3;
+            filter: grayscale(100%);
+            transform: scale(0.95);
+            transition: all 0.4s ease;
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #d6d3d1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a8a29e; }
+
+        .nav-btn {
+            position: relative;
+            color: #78716c;
+            transition: color 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .nav-btn:hover { color: #1c1917; }
+        .nav-btn.active {
+            color: #1c1917;
+            font-weight: 700;
+        }
+        .nav-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -16px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: #1c1917;
+        }
+
+        /* 지형지물 면/선(Shape) 스타일 */
+        .terrain-shape {
+            pointer-events: auto;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .terrain-shape-mountain { stroke: #92400e; stroke-width: 16px; stroke-linecap: round; stroke-linejoin: round; fill: none; opacity: 0.4; vector-effect: non-scaling-stroke; }
+        .terrain-shape-river { stroke: #3b82f6; stroke-width: 3.5px; stroke-linecap: round; stroke-linejoin: round; fill: none; opacity: 0.9; vector-effect: non-scaling-stroke; }
+        .terrain-shape-river-tributary { stroke: #60a5fa; stroke-width: 1.5px; stroke-linecap: round; stroke-linejoin: round; fill: none; opacity: 0.7; vector-effect: non-scaling-stroke; }
+        .terrain-shape-plain { fill: #4ade80; opacity: 0.5; stroke: #166534; stroke-width: 1.5px; stroke-dasharray: 4,4; }
+        .terrain-shape-highland { fill: #f59e0b; opacity: 0.5; stroke: #92400e; stroke-width: 1.5px; stroke-dasharray: 4,4; }
+        .terrain-shape-desert { fill: #fde047; opacity: 0.7; stroke: #ca8a04; stroke-width: 1.5px; stroke-dasharray: 4,4; }
+
+        /* 활성화(클릭) 시 Shape 스타일 */
+        .terrain-active.terrain-shape-mountain { stroke: #78350f; opacity: 0.8; stroke-width: 20px; }
+        .terrain-active.terrain-shape-river { stroke: #1d4ed8; stroke-width: 5.5px; opacity: 1; }
+        .terrain-active.terrain-shape-river-tributary { stroke: #2563eb; stroke-width: 3px; opacity: 0.9; }
+        .terrain-active.terrain-shape-plain { fill: #22c55e; opacity: 0.8; }
+        .terrain-active.terrain-shape-highland { fill: #d97706; opacity: 0.8; }
+        .terrain-active.terrain-shape-desert { fill: #eab308; opacity: 0.9; }
+
+        /* 텍스트 라벨 스타일 */
+        .terrain-text {
+            font-family: 'Noto Sans KR', sans-serif;
+            font-weight: 700;
+            font-size: 11px;
+            font-style: italic;
+            text-shadow: 1px 1px 2px rgba(255,255,255,0.9), -1px -1px 2px rgba(255,255,255,0.9);
+            pointer-events: auto;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .terrain-text-mountain { fill: #78350f; }
+        .terrain-text-river { fill: #1d4ed8; }
+        .terrain-text-plain { fill: #14532d; }
+        .terrain-text-highland { fill: #92400e; }
+        .terrain-text-desert { fill: #a16207; }
+
+        .terrain-active.terrain-text {
+            font-weight: 900;
+            font-size: 16px;
+            text-shadow: 2px 2px 4px rgba(255,255,255,1), -2px -2px 4px rgba(255,255,255,1);
+        }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden">
+
+    <!-- 첫 화면 -->
+    <div id="home-screen" class="absolute inset-0 bg-stone-50 z-50 flex items-center justify-center transition-opacity duration-700">
+        <div class="max-w-6xl w-full px-8 grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+            <div class="space-y-6">
+                <p class="text-stone-500 tracking-widest text-sm font-medium uppercase">Middle School Geography</p>
+                <h1 class="text-5xl md:text-6xl font-light text-stone-900 tracking-tight leading-tight">
+                    아메리카 대륙 <br><span class="font-bold">탐구 프로젝트</span>
+                </h1>
+                <div class="bg-white border border-stone-200 p-5 rounded-lg shadow-sm">
+                    <p class="text-sm text-stone-600 font-bold mb-2"><i class="fas fa-info-circle text-stone-400 mr-1"></i> 학습 안내</p>
+                    <p class="text-sm text-stone-500 leading-relaxed">
+                        우측의 4가지 스테이지를 순서대로 클릭하여 학습을 진행하세요. 지도를 직접 탐색하며 아메리카 대륙의 지리, 문화, 통계를 전문적으로 분석할 수 있습니다.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="flex flex-col gap-4">
+                <button onclick="startApp('study')" class="group text-left p-6 bg-white border border-stone-200 hover:border-stone-900 transition-colors flex justify-between items-center rounded-lg shadow-sm hover:shadow-md">
+                    <div>
+                        <span class="block text-xs font-bold text-stone-400 tracking-wider mb-1">STAGE 1</span>
+                        <span class="block text-xl font-medium text-stone-900">지리 데이터 탐색</span>
+                    </div>
+                    <span class="text-stone-300 group-hover:text-stone-900 transition-colors text-2xl">→</span>
+                </button>
+
+                <button onclick="startApp('quiz')" class="group text-left p-6 bg-white border border-stone-200 hover:border-stone-900 transition-colors flex justify-between items-center rounded-lg shadow-sm hover:shadow-md">
+                    <div>
+                        <span class="block text-xs font-bold text-stone-400 tracking-wider mb-1">STAGE 2</span>
+                        <span class="block text-xl font-medium text-stone-900">영토 퀴즈</span>
+                    </div>
+                    <span class="text-stone-300 group-hover:text-stone-900 transition-colors text-2xl">→</span>
+                </button>
+
+                <button onclick="startApp('worldcup')" class="group text-left p-6 bg-white border border-stone-200 hover:border-stone-900 transition-colors flex justify-between items-center rounded-lg shadow-sm hover:shadow-md">
+                    <div>
+                        <span class="block text-xs font-bold text-stone-400 tracking-wider mb-1">STAGE 3</span>
+                        <span class="block text-xl font-medium text-stone-900">월드컵 조편성 분석</span>
+                    </div>
+                    <span class="text-stone-300 group-hover:text-stone-900 transition-colors text-2xl">→</span>
+                </button>
+
+                <button onclick="startApp('battle')" class="group text-left p-6 bg-white border border-stone-200 hover:border-stone-900 transition-colors flex justify-between items-center rounded-lg shadow-sm hover:shadow-md">
+                    <div>
+                        <span class="block text-xs font-bold text-stone-400 tracking-wider mb-1">STAGE 4</span>
+                        <span class="block text-xl font-medium text-stone-900">국가 스탯 시뮬레이션</span>
+                    </div>
+                    <span class="text-stone-300 group-hover:text-stone-900 transition-colors text-2xl">→</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 헤더 -->
+    <header class="bg-white border-b border-stone-200 z-10 flex-shrink-0">
+        <div class="max-w-screen-2xl mx-auto px-6 h-16 flex justify-between items-center">
+            <h1 class="text-lg font-bold text-stone-900 tracking-tight cursor-pointer flex items-center gap-2" onclick="goHome()">
+                <i class="fas fa-globe-americas text-stone-400"></i> AMERICA CONTINENT
+            </h1>
+            <nav class="flex gap-6 lg:gap-8 text-sm h-full items-center">
+                <button id="btn-home" class="nav-btn h-full" onclick="goHome()">
+                    <i class="fas fa-home"></i> 처음으로
+                </button>
+                <div class="w-px h-4 bg-stone-300 hidden sm:block"></div>
+                <button id="btn-study" class="nav-btn h-full" onclick="switchMode('study')">1. 탐색</button>
+                <button id="btn-quiz" class="nav-btn h-full" onclick="switchMode('quiz')">2. 퀴즈</button>
+                <button id="btn-worldcup" class="nav-btn h-full" onclick="switchMode('worldcup')">3. 월드컵</button>
+                <button id="btn-battle" class="nav-btn h-full" onclick="switchMode('battle')">4. 시뮬레이션</button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- 메인 컨텐츠 영역 -->
+    <main class="flex-1 flex overflow-hidden w-full max-w-screen-2xl mx-auto">
+        <!-- 왼쪽 지도 -->
+        <div id="map-container" class="w-3/5 h-full relative border-r border-stone-200">
+            
+            <!-- 지형 레이어 토글 버튼 -->
+            <button id="layer-toggle-btn" class="absolute top-6 right-6 bg-white/90 backdrop-blur-sm border border-stone-300 shadow-sm rounded-md px-4 py-2 text-xs font-bold text-stone-700 hover:bg-stone-50 hover:text-stone-900 z-20 transition-colors hidden" onclick="toggleTerrain()">
+                <i id="layer-toggle-icon" class="fas fa-layer-group text-stone-500 mr-1"></i> <span id="layer-toggle-text">자연환경 보기</span>
+            </button>
+
+            <!-- 범례 -->
+            <div id="map-legend" class="absolute bottom-6 left-6 bg-white/90 backdrop-blur-sm px-4 py-3 border border-stone-200 text-xs font-medium text-stone-600 z-10 pointer-events-none hidden rounded-md shadow-sm"></div>
+
+            <!-- 로딩 화면 -->
+            <div id="loading" class="absolute inset-0 flex flex-col items-center justify-center bg-stone-50 z-30">
+                <i class="fas fa-circle-notch fa-spin text-stone-400 text-3xl mb-3"></i>
+                <p class="text-sm font-medium text-stone-500 tracking-widest uppercase">지도를 불러오는 중입니다...</p>
+            </div>
+
+            <svg id="map" class="w-full h-full"></svg>
+        </div>
+
+        <!-- 오른쪽 정보 패널 -->
+        <div id="panel-container" class="w-2/5 h-full bg-white overflow-y-auto relative"></div>
+    </main>
+
+    <script>
+        // 전체 아메리카 대륙 국가 데이터 확충
+        const countryInfo = {
+            "United States of America": { ko: "미국", capital: "워싱턴 D.C.", pop: "약 3억 3,900만 명", area: "약 983만 km²", lang: "영어", gdp: "세계 1위", desc: "앵글로아메리카의 대표 국가이자 세계 1위의 경제 대국입니다. 다양한 민족과 문화가 섞인 '인종의 용광로'이며, 북아메리카의 넓은 영토를 차지하고 있습니다.", img: "https://flagcdn.com/w320/us.png", coords: [-77.0369, 38.9072], fifa: "11위", wcGroup: "D조 (공동 개최국)", wcOpponents: "파라과이(남아메리카), 호주(오세아니아), 튀르키예(유럽)", rawPop: 33900, rawArea: 983, rawGdp: 1 },
+            "Canada": { ko: "캐나다", capital: "오타와", pop: "약 3,800만 명", area: "약 998만 km²", lang: "영어, 프랑스어", gdp: "세계 10위", desc: "러시아에 이어 세계에서 두 번째로 영토가 넓습니다. 미국과 함께 앵글로아메리카에 속하며, 로키산맥과 나이아가라 폭포 등 웅장한 자연환경을 자랑합니다.", img: "https://flagcdn.com/w320/ca.png", coords: [-75.6972, 45.4215], fifa: "49위", wcGroup: "B조 (공동 개최국)", wcOpponents: "웨일스(유럽), 카타르(아시아), 스위스(유럽)", rawPop: 3800, rawArea: 998, rawGdp: 10 },
+            "Mexico": { ko: "멕시코", capital: "멕시코시티", pop: "약 1억 2,800만 명", area: "약 196만 km²", lang: "스페인어", gdp: "세계 12위", desc: "지리적으로는 북아메리카에 속하지만, 문화적으로는 라틴아메리카의 시작점입니다. 마야, 아즈텍 등 찬란한 고대 문명의 발상지입니다.", img: "https://flagcdn.com/w320/mx.png", coords: [-99.1332, 19.4326], fifa: "14위", wcGroup: "A조 (공동 개최국)", wcOpponents: "남아프리카공화국(아프리카), 대한민국(아시아), 체코(유럽)", rawPop: 12800, rawArea: 196, rawGdp: 12 },
+            "Brazil": { ko: "브라질", capital: "브라질리아", pop: "약 2억 1,500만 명", area: "약 851만 km²", lang: "포르투갈어", gdp: "세계 9위", desc: "남아메리카에서 가장 큰 나라이자 유일하게 포르투갈어를 사용합니다. 지구의 허파로 불리는 아마존 열대우림과 삼바 축제가 세계적으로 유명합니다.", img: "https://flagcdn.com/w320/br.png", coords: [-47.9292, -15.7801], fifa: "5위", wcGroup: "C조", wcOpponents: "모로코(아프리카), 아이티(북아메리카), 스코틀랜드(유럽)", rawPop: 21500, rawArea: 851, rawGdp: 9 },
+            "Argentina": { ko: "아르헨티나", capital: "부에노스아이레스", pop: "약 4,600만 명", area: "약 278만 km²", lang: "스페인어", gdp: "세계 22위", desc: "남아메리카 남부에 위치하며, 탱고의 본고장입니다. 안데스 산맥, 거대한 팜파스 대평원, 빙하가 있는 파타고니아 등 다채로운 지형이 특징입니다.", img: "https://flagcdn.com/w320/ar.png", coords: [-58.3816, -34.6037], fifa: "1위", wcGroup: "J조", wcOpponents: "알제리(아프리카), 오스트리아(유럽), 요르단(아시아)", rawPop: 4600, rawArea: 278, rawGdp: 22 },
+            "Chile": { ko: "칠레", capital: "산티아고", pop: "약 1,900만 명", area: "약 75만 km²", lang: "스페인어", gdp: "세계 44위", desc: "안데스 산맥과 태평양 사이에 남북으로 매우 길게 뻗은 독특한 영토를 가집니다. 북부의 건조한 아타카마 사막과 이스터 섬의 모아이 석상이 유명합니다.", img: "https://flagcdn.com/w320/cl.png", coords: [-70.6693, -33.4489], fifa: "42위", wcGroup: "본선 진출 실패", wcOpponents: "-", rawPop: 1900, rawArea: 75, rawGdp: 44 },
+            "Colombia": { ko: "콜롬비아", capital: "보고타", pop: "약 5,200만 명", area: "약 114만 km²", lang: "스페인어", gdp: "세계 41위", desc: "남아메리카 북서부에 위치하여 태평양과 카리브해를 모두 접하고 있습니다. 세계적인 커피 생산국이며 적도가 지나갑니다.", img: "https://flagcdn.com/w320/co.png", coords: [-74.0721, 4.7110], fifa: "12위", wcGroup: "K조", wcOpponents: "포르투갈(유럽), 콩고민주공화국(아프리카), 우즈베키스탄(아시아)", rawPop: 5200, rawArea: 114, rawGdp: 41 },
+            "Peru": { ko: "페루", capital: "리마", pop: "약 3,400만 명", area: "약 128만 km²", lang: "스페인어", gdp: "세계 50위", desc: "잉카 제국의 신비로운 공중 도시 마추픽추가 있는 국가입니다. 안데스 산맥의 웅장한 지형과 고원 지대의 독특한 원주민 문화를 엿볼 수 있습니다.", img: "https://flagcdn.com/w320/pe.png", coords: [-77.0282, -12.0464], fifa: "32위", wcGroup: "본선 진출 실패", wcOpponents: "-", rawPop: 3400, rawArea: 128, rawGdp: 50 },
+            "Venezuela": { ko: "베네수엘라", capital: "카라카스", pop: "약 2,800만 명", area: "약 91만 km²", lang: "스페인어", gdp: "통계 산정 어려움", desc: "세계 최대 수준의 석유 매장량을 자랑하며, 세계에서 가장 높은 폭포인 '앙헬 폭포(Angel Falls)'가 테이블 산인 테푸이에서 떨어집니다.", img: "https://flagcdn.com/w320/ve.png", coords: [-66.9036, 10.4806], fifa: "54위", wcGroup: "본선 진출 실패", wcOpponents: "-", rawPop: 2800, rawArea: 91, rawGdp: 999 },
+            "Cuba": { ko: "쿠바", capital: "아바나", pop: "약 1,100만 명", area: "약 10만 km²", lang: "스페인어", gdp: "통계 산정 어려움", desc: "카리브해 최대의 섬나라로 아메리카 유일의 사회주의 국가입니다. 거리를 누비는 클래식 올드카, 시가, 그리고 열정적인 룸바 음악이 상징입니다.", img: "https://flagcdn.com/w320/cu.png", coords: [-82.3666, 23.1136], fifa: "169위", wcGroup: "본선 진출 실패", wcOpponents: "-", rawPop: 1100, rawArea: 10, rawGdp: 999 },
+            "Ecuador": { ko: "에콰도르", capital: "키토", pop: "약 1,800만 명", area: "약 28만 km²", lang: "스페인어", gdp: "세계 64위", desc: "국명 자체가 에스파냐어로 '적도'를 의미합니다. 다윈의 진화론에 큰 영감을 준 희귀 동식물의 보고 '갈라파고스 제도'가 속해 있습니다.", img: "https://flagcdn.com/w320/ec.png", coords: [-78.5047, -0.2295], fifa: "31위", wcGroup: "E조", wcOpponents: "독일(유럽), 퀴라소(북아메리카), 코트디부아르(아프리카)", rawPop: 1800, rawArea: 28, rawGdp: 64 },
+            "Bolivia": { ko: "볼리비아", capital: "수크레(행정수도 라파스)", pop: "약 1,200만 명", area: "약 109만 km²", lang: "스페인어 등", gdp: "세계 93위", desc: "남아메리카의 대표적인 내륙국입니다. 우기에 하늘을 거울처럼 비추어 '세상에서 가장 큰 거울'이라 불리는 우유니 소금 사막이 매우 유명합니다.", img: "https://flagcdn.com/w320/bo.png", coords: [-68.1193, -16.4897], fifa: "85위", wcGroup: "본선 진출 실패", wcOpponents: "-", rawPop: 1200, rawArea: 109, rawGdp: 93 },
+            "Panama": { ko: "파나마", capital: "파나마시티", pop: "약 440만 명", area: "약 7.5만 km²", lang: "스페인어", gdp: "세계 73위", desc: "북아메리카와 남아메리카를 잇는 좁은 지협에 위치합니다. 태평양과 대서양을 가장 빠르게 연결하는 세계 물류의 핵심, 파나마 운하가 있습니다.", img: "https://flagcdn.com/w320/pa.png", coords: [-79.5199, 8.9824], fifa: "45위", wcGroup: "L조", wcOpponents: "잉글랜드(유럽), 크로아티아(유럽), 가나(아프리카)", rawPop: 440, rawArea: 7.5, rawGdp: 73 },
+            "Jamaica": { ko: "자메이카", capital: "킹스턴", pop: "약 280만 명", area: "약 1.1만 km²", lang: "영어", gdp: "세계 119위", desc: "지리적으로는 라틴아메리카(카리브해)에 위치하지만 영어를 사용해 문화적으론 앵글로아메리카에 속합니다. 레게 음악의 발상지입니다.", img: "https://flagcdn.com/w320/jm.png", coords: [-76.7920, 17.9716], fifa: "55위", wcGroup: "본선 진출 실패", wcOpponents: "-", rawPop: 280, rawArea: 1.1, rawGdp: 119 },
+            "Guyana": { ko: "가이아나", capital: "조지타운", pop: "약 80만 명", area: "약 21만 km²", lang: "영어", gdp: "세계 103위", desc: "남아메리카 북부에 위치하지만, 영어를 공용어로 사용하는 앵글로아메리카 국가입니다.", img: "https://flagcdn.com/w320/gy.png", coords: [-58.1551, 6.8013], fifa: "154위", wcGroup: "본선 진출 실패", wcOpponents: "-", rawPop: 80, rawArea: 21, rawGdp: 103 },
+            "Suriname": { ko: "수리남", capital: "파라마리보", pop: "약 60만 명", area: "약 16만 km²", lang: "네덜란드어", gdp: "세계 150위권 밖", desc: "남아메리카에서 가장 작은 독립국이며, 네덜란드의 지배를 받아 네덜란드어를 사용합니다.", img: "https://flagcdn.com/w320/sr.png", coords: [-55.2038, 5.8520], fifa: "144위", wcGroup: "본선 진출 실패", wcOpponents: "-", rawPop: 60, rawArea: 16, rawGdp: 150 },
+            "Paraguay": { ko: "파라과이", capital: "아순시온", pop: "약 680만 명", area: "약 40만 km²", lang: "스페인어, 과라니어", gdp: "세계 95위", desc: "남아메리카 중심부에 위치한 내륙국입니다. 바다와 접해있지 않지만, 강을 통해 대서양으로 나갈 수 있으며 수력 발전이 발달했습니다.", img: "https://flagcdn.com/w320/py.png", coords: [-57.6359, -25.3006], fifa: "56위", wcGroup: "D조", wcOpponents: "미국(북아메리카), 호주(오세아니아), 튀르키예(유럽)", rawPop: 680, rawArea: 40, rawGdp: 95 },
+            "Uruguay": { ko: "우루과이", capital: "몬테비데오", pop: "약 340만 명", area: "약 17만 km²", lang: "스페인어", gdp: "세계 70위", desc: "아르헨티나와 브라질 사이에 위치한 작고 평화로운 국가입니다. 복지 제도가 잘 갖춰져 있고 소고기 수출이 유명합니다.", img: "https://flagcdn.com/w320/uy.png", coords: [-56.1645, -34.9011], fifa: "15위", wcGroup: "H조", wcOpponents: "스페인(유럽), 카보베르데(아프리카), 사우디아라비아(아시아)", rawPop: 340, rawArea: 17, rawGdp: 70 },
+            // 추가된 국가 데이터
+            "Guatemala": { ko: "과테말라", capital: "과테말라시티", pop: "약 1,800만 명", area: "약 10만 km²", lang: "스페인어", gdp: "세계 68위", desc: "중앙아메리카 북서부에 위치하며 고대 마야 문명의 중심지였던 곳입니다. 화산이 많고 커피 수출로 유명합니다.", img: "https://flagcdn.com/w320/gt.png", coords: [-90.2299, 14.6349], fifa: "108위", wcGroup: "본선 진출 실패", wcOpponents: "-", rawPop: 1800, rawArea: 10.8, rawGdp: 68 },
+            "Belize": { ko: "벨리즈", capital: "벨모판", pop: "약 40만 명", area: "약 2.2만 km²", lang: "영어", gdp: "세계 160위권 밖", desc: "중앙아메리카에서 유일하게 영어를 공용어로 사용하는 앵글로아메리카 국가입니다. 아름다운 카리브해 산호초로 유명합니다.", img: "https://flagcdn.com/w320/bz.png", coords: [-88.7593, 17.2510], fifa: "182위", wcGroup: "본선 진출 실패", wcOpponents: "-", rawPop: 40, rawArea: 2.2, rawGdp: 165 },
+            "Honduras": { ko: "온두라스", capital: "테구시갈파", pop: "약 1,000만 명", area: "약 11만 km²", lang: "스페인어", gdp: "세계 100위권 밖", desc: "중앙아메리카 중심부에 위치하며 산악 지형이 대부분입니다. 바나나와 커피 등 농업이 발달해 있습니다.", img: "https://flagcdn.com/w320/hn.png", coords: [-87.2068, 14.0818], fifa: "82위", wcGroup: "본선 진출 실패", wcOpponents: "-", rawPop: 1000, rawArea: 11.2, rawGdp: 105 },
+            "El Salvador": { ko: "엘살바도르", capital: "산살바도르", pop: "약 630만 명", area: "약 2.1만 km²", lang: "스페인어", gdp: "세계 100위권 밖", desc: "중앙아메리카에서 가장 면적이 작은 국가지만 인구 밀도가 높습니다. 화산이 매우 많은 지형적 특징을 가집니다.", img: "https://flagcdn.com/w320/sv.png", coords: [-89.2182, 13.6929], fifa: "81위", wcGroup: "본선 진출 실패", wcOpponents: "-", rawPop: 630, rawArea: 2.1, rawGdp: 102 },
+            "Nicaragua": { ko: "니카라과", capital: "마나과", pop: "약 680만 명", area: "약 13만 km²", lang: "스페인어", gdp: "세계 130위권 밖", desc: "중앙아메리카에서 가장 넓은 면적을 가졌습니다. 화산 활동이 활발하며 거대한 니카라과 호수가 있습니다.", img: "https://flagcdn.com/w320/ni.png", coords: [-86.2362, 12.1150], fifa: "135위", wcGroup: "본선 진출 실패", wcOpponents: "-", rawPop: 680, rawArea: 13, rawGdp: 135 },
+            "Costa Rica": { ko: "코스타리카", capital: "산호세", pop: "약 510만 명", area: "약 5.1만 km²", lang: "스페인어", gdp: "세계 80위권", desc: "군대를 폐지하고 영세 중립을 선언한 평화의 나라입니다. 생물 다양성이 뛰어나 생태 관광의 천국으로 불립니다.", img: "https://flagcdn.com/w320/cr.png", coords: [-84.0907, 9.9281], fifa: "52위", wcGroup: "본선 진출 실패", wcOpponents: "-", rawPop: 510, rawArea: 5.1, rawGdp: 85 },
+            "Dominican Republic": { ko: "도미니카 공화국", capital: "산토도밍고", pop: "약 1,100만 명", area: "약 4.8만 km²", lang: "스페인어", gdp: "세계 60위권", desc: "카리브해 이스파니올라섬 동쪽에 위치한 나라입니다. 아름다운 해변 관광지로 전 세계적인 사랑을 받습니다.", img: "https://flagcdn.com/w320/do.png", coords: [-69.9312, 18.4861], fifa: "60위", wcGroup: "본선 진출 실패", wcOpponents: "-", rawPop: 1100, rawArea: 4.8, rawGdp: 65 },
+            "Haiti": { ko: "아이티", capital: "포르토프랭스", pop: "약 1,100만 명", area: "약 2.7만 km²", lang: "프랑스어, 아이티 크레올어", gdp: "세계 140위권", desc: "아메리카 대륙 최초로 흑인 노예들이 주도하여 독립을 이뤄낸 역사적인 국가입니다. 이스파니올라섬 서쪽에 있습니다.", img: "https://flagcdn.com/w320/ht.png", coords: [-72.2852, 18.5392], fifa: "89위", wcGroup: "C조", wcOpponents: "브라질(남아메리카), 모로코(아프리카), 스코틀랜드(유럽)", rawPop: 1100, rawArea: 2.7, rawGdp: 140 },
+            "The Bahamas": { ko: "바하마", capital: "나소", pop: "약 40만 명", area: "약 1.3만 km²", lang: "영어", gdp: "세계 130위권", desc: "미국 플로리다 반도 앞바다에 수백 개의 산호초 섬으로 이루어진 카리브해의 앵글로아메리카 섬나라입니다.", img: "https://flagcdn.com/w320/bs.png", coords: [-77.3963, 25.0343], fifa: "200위권 밖", wcGroup: "본선 진출 실패", wcOpponents: "-", rawPop: 40, rawArea: 1.3, rawGdp: 132 },
+            "Puerto Rico": { ko: "푸에르토리코", capital: "산후안", pop: "약 320만 명", area: "약 0.9만 km²", lang: "스페인어, 영어", gdp: "통계 별도 산정", desc: "독립국이 아닌 미국의 자치령으로, 카리브해에 위치하며 라틴 아메리카와 미국 문화가 독특하게 혼합되어 있습니다.", img: "https://flagcdn.com/w320/pr.png", coords: [-66.1057, 18.4655], fifa: "160위", wcGroup: "본선 진출 실패", wcOpponents: "-", rawPop: 320, rawArea: 0.9, rawGdp: 999 }
+        };
+
+        // 지형지물 데이터
+        const terrainFeatures = [
+            { id: "t-rocky", groupId: "g-rocky", name: "로키산맥", type: "mountain", geometry: { type: "LineString", coordinates: [[-125, 55], [-121, 51], [-116, 47], [-111, 43], [-109, 39], [-106, 35], [-105, 32]] }, labelCoords: [-112, 45], labelRotate: 55, desc: "북아메리카 대륙의 서부를 길게 종단하는 거대한 산맥입니다. 비교적 최근에 땅이 솟아올라 만들어졌기 때문에 지형이 매우 높고 뾰족하며 험준한 것이 특징입니다." },
+            { id: "t-appalachian", groupId: "g-appalachian", name: "애팔래치아 산맥", type: "mountain", geometry: { type: "LineString", coordinates: [[-68, 47], [-71, 44], [-75, 41], [-79, 38], [-83, 35], [-86.5, 33]] }, labelCoords: [-78, 38], labelRotate: -45, desc: "북아메리카 동부에 위치한 오래된 산맥입니다. 수억 년 동안 비바람에 깎이고 침식되어 산세가 완만하며, 석탄 등 지하자원이 풍부합니다." },
+            { id: "t-andes", groupId: "g-andes", name: "안데스산맥", type: "mountain", geometry: { type: "LineString", coordinates: [[-74, 8], [-76, 4], [-78.5, 0], [-79.5, -6], [-77, -12], [-74, -16], [-69, -22], [-69, -28], [-70.5, -35], [-72, -45], [-73, -52]] }, labelCoords: [-74, -20], labelRotate: 80, desc: "남아메리카 서해안을 따라 뻗어 있는 세계에서 가장 긴 산맥으로 험준한 지형을 이룹니다." },
+            { id: "t-greatplains", groupId: "g-greatplains", name: "대평원", type: "plain", geometry: { type: "Polygon", coordinates: [[[-114, 53], [-105, 54], [-98, 50], [-96, 42], [-97, 34], [-100, 29], [-104, 32], [-105, 40], [-109, 46]]] }, labelCoords: [-100, 40], labelRotate: 0, desc: "로키산맥 동쪽에 넓게 펼쳐진 대초원 지대로, 밀 재배와 소 방목 등 대규모 농업 및 목축업이 이루어집니다." },
+            { id: "t-amazonbasin", groupId: "g-amazonbasin", name: "아마존분지", type: "plain", geometry: { type: "Polygon", coordinates: [[[-76, 2], [-70, 4], [-62, 3], [-54, 1], [-50, -2], [-52, -8], [-58, -13], [-66, -14], [-74, -10], [-77, -4]]] }, labelCoords: [-61, -9], labelRotate: 0, desc: "아마존강 유역에 넓게 퍼져 있는 지구 최대의 열대 우림 지대입니다.<br><br><div class='bg-blue-50 border border-blue-100 p-3 rounded-md mt-2'><span class='text-blue-700 font-bold text-xs'>💡 분지란?</span><br><span class='text-sm text-stone-800 font-medium'>주변이 산이나 산지로 둘러싸여 있는 낮고 평평한 땅을 말합니다.</span></div>" },
+            { id: "t-brazilhighland", groupId: "g-brazilhighland", name: "브라질고원", type: "highland", geometry: { type: "Polygon", coordinates: [[[-48, -4], [-40, -5], [-36, -8], [-40, -18], [-46, -25], [-52, -28], [-54, -22], [-51, -15], [-48, -4]]] }, labelCoords: [-46, -15], labelRotate: 0, desc: "브라질 면적의 절반 이상을 차지하는 거대한 고원 지대로, 철광석이 풍부하며 커피 재배가 활발합니다." },
+            { id: "t-uyuni", groupId: "g-uyuni", name: "우유니 사막", type: "desert", geometry: { type: "Polygon", coordinates: [[[-69.0, -19.0], [-66.5, -18.5], [-65.0, -19.5], [-65.0, -21.5], [-66.5, -22.0], [-69.0, -21.5]]] }, labelCoords: [-67.0, -20.2], labelRotate: 0, desc: "볼리비아 고산지대에 위치한 세계 최대의 소금 사막입니다. 우기에는 얕은 물이 고여 거대한 거울처럼 변합니다." },
+            
+            // 미시시피 강
+            { id: "t-mississippi-main", groupId: "g-mississippi", name: "미시시피강", type: "river", geometry: { type: "LineString", coordinates: [[-93.2, 45.0], [-91.0, 42.0], [-90.2, 38.6], [-90.5, 34.0], [-91.0, 31.5], [-89.6, 29.5]] }, labelCoords: [-91, 38], labelRotate: 80, desc: "북아메리카 중앙을 남쪽으로 흘러 멕시코만으로 들어가는 거대한 강으로, 미국 농업과 수운 교통의 핵심 역할을 합니다." },
+            { id: "t-mississippi-trib1", groupId: "g-mississippi", name: "", type: "river-tributary", geometry: { type: "LineString", coordinates: [[-112, 46], [-106, 47], [-100, 43], [-95, 39], [-90.2, 38.6]] }, desc: "" },
+            { id: "t-mississippi-trib2", groupId: "g-mississippi", name: "", type: "river-tributary", geometry: { type: "LineString", coordinates: [[-80, 40.5], [-84, 38.5], [-88, 37.5], [-90.3, 36.5], [-90.5, 34.0]] }, desc: "" },
+            { id: "t-mississippi-trib3", groupId: "g-mississippi", name: "", type: "river-tributary", geometry: { type: "LineString", coordinates: [[-106, 39], [-100, 37], [-95, 35], [-91.0, 31.5]] }, desc: "" },
+
+            // 아마존 강
+            { id: "t-amazon-main", groupId: "g-amazon", name: "아마존강", type: "river", geometry: { type: "LineString", coordinates: [[-73.5, -4.8], [-70.5, -3.8], [-67.5, -3.2], [-64.5, -3.1], [-61.5, -3.5], [-58.5, -2.8], [-55.5, -2.2], [-52.5, -1.5], [-50.0, 0.0], [-49.5, 0.8]] }, labelCoords: [-61, -3], labelRotate: -5, desc: "남아메리카를 가로질러 대서양으로 흐르는 거대한 강으로, 전세계 유량(강물의 양)의 20%를 차지할 정도로 유량이 가장 많은 강이자 넓은 열대 우림을 지납니다." },
+            { id: "t-amazon-trib1", groupId: "g-amazon", name: "", type: "river-tributary", geometry: { type: "LineString", coordinates: [[-68.0, 4.0], [-66.0, 1.0], [-64.5, -1.0], [-61.5, -3.5]] }, desc: "" },
+            { id: "t-amazon-trib2", groupId: "g-amazon", name: "", type: "river-tributary", geometry: { type: "LineString", coordinates: [[-65.0, -13.0], [-63.5, -9.0], [-61.5, -3.5]] }, desc: "" },
+            { id: "t-amazon-trib3", groupId: "g-amazon", name: "", type: "river-tributary", geometry: { type: "LineString", coordinates: [[-58.0, -11.0], [-56.5, -6.5], [-55.5, -2.2]] }, desc: "" },
+            { id: "t-amazon-trib4", groupId: "g-amazon", name: "", type: "river-tributary", geometry: { type: "LineString", coordinates: [[-53.5, -10.5], [-52.8, -6.0], [-52.5, -1.5]] }, desc: "" },
+            { id: "t-amazon-trib5", groupId: "g-amazon", name: "", type: "river-tributary", geometry: { type: "LineString", coordinates: [[-74.5, 0.5], [-72.5, -1.5], [-70.5, -3.8]] }, desc: "" },
+            { id: "t-amazon-trib6", groupId: "g-amazon", name: "", type: "river-tributary", geometry: { type: "LineString", coordinates: [[-70.0, -9.5], [-68.0, -6.5], [-66.0, -3.4], [-64.5, -3.1]] }, desc: "" }
+        ];
+
+        let currentMode = 'home';
+        let selectedCountryId = null;
+        let selectedTerrain = null; 
+        let mapFeatures = [];
+        let d3Map, pathGenerator, projection;
+        
+        let quizQuestions = [];
+        let currentQIndex = 0;
+        let score = 0;
+        let isAnimating = false;
+
+        let battleOpponents = [];
+        let currentOpponentId = null;
+        let battleScore = 0;
+        let battleState = 'select_stat';
+        let pendingStatKey = null;
+
+        let quizTimerInterval = null;
+        let quizTimeRemaining = 10;
+        
+        let showTerrain = false; 
+
+        function getCountryColor(d) {
+            const info = countryInfo[d.properties.name];
+            let baseColor = '#e7e5e4'; // stone-200
+
+            if (currentMode === 'worldcup') {
+                if (!info || info.wcGroup.includes('실패') || info.wcGroup.includes('불가')) return baseColor;
+                return '#93c5fd'; 
+            } else if (currentMode === 'battle' || currentMode === 'battle_arena') {
+                if (!info) return baseColor;
+                if (selectedCountryId) return baseColor; 
+                return '#d6d3d1'; 
+            } else if (currentMode === 'quiz' || currentMode === 'result') {
+                return baseColor; 
+            }
+            return info ? '#d6d3d1' : baseColor;
+        }
+
+        async function init() {
+            try {
+                let data;
+                try {
+                    const res = await fetch('https://cdn.jsdelivr.net/gh/johan/world.geo.json@master/countries.geo.json');
+                    if (!res.ok) throw new Error("Primary CDN failed");
+                    data = await res.json();
+                } catch (err) {
+                    const fallbackRes = await fetch('https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json');
+                    data = await fallbackRes.json();
+                }
+                
+                // countryInfo에 명시된 국가들만 필터링하여 렌더링
+                const targetCountries = Object.keys(countryInfo);
+                
+                mapFeatures = data.features.filter(f => 
+                    targetCountries.includes(f.properties.name)
+                );
+
+                document.getElementById('loading').style.display = 'none';
+                drawMap();
+                
+                let resizeTimer;
+                window.addEventListener('resize', () => {
+                    clearTimeout(resizeTimer);
+                    resizeTimer = setTimeout(drawMap, 200);
+                });
+
+            } catch (error) {
+                document.getElementById('loading').innerHTML = `<p class="text-sm font-medium text-red-700">지도 데이터를 불러오지 못했습니다.</p>`;
+            }
+        }
+
+        function drawMap() {
+            const container = document.getElementById('map-container');
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+
+            const svg = d3.select('#map');
+            svg.selectAll("*").remove(); 
+            
+            // 바탕(바다) 클릭 시 지형 및 국가 선택 해제
+            svg.on('click', () => {
+                d3.selectAll('.terrain-active').classed('terrain-active', false);
+                if (currentMode === 'study' && selectedTerrain) {
+                    selectedTerrain = null;
+                    renderPanel();
+                }
+            });
+
+            const g = svg.append('g');
+
+            const zoom = d3.zoom()
+                .scaleExtent([0.8, 8])
+                .on('zoom', (event) => { g.attr('transform', event.transform); });
+            svg.call(zoom);
+
+            projection = d3.geoMercator()
+                .center([-80, 5])
+                .scale(Math.min(width, height) * 0.45)
+                .translate([width / 2, height / 2]);
+
+            pathGenerator = d3.geoPath().projection(projection);
+
+            g.selectAll('path.country')
+                .data(mapFeatures)
+                .enter()
+                .append('path')
+                .attr('d', pathGenerator)
+                .attr('class', 'country')
+                .attr('id', d => `country-${d.properties.name.replace(/\s+/g, '-')}`)
+                .attr('fill', d => getCountryColor(d))
+                .on('click', (event, d) => handleCountryClick(event, d));
+
+            // 수도 표시 (작은 국가는 점도 작게 다이내믹 스케일링 적용)
+            const starData = mapFeatures.filter(d => countryInfo[d.properties.name]);
+            g.selectAll('circle.capital-dot')
+                .data(starData)
+                .enter()
+                .append('circle')
+                .attr('class', 'capital-dot')
+                .attr('cx', d => projection(countryInfo[d.properties.name].coords)[0])
+                .attr('cy', d => projection(countryInfo[d.properties.name].coords)[1])
+                .attr('r', d => {
+                    const area = countryInfo[d.properties.name].rawArea;
+                    if (area <= 5) return 0.6;   // 푸에르토리코, 바하마, 엘살바도르 등 영토가 아주 작은 국가
+                    if (area <= 15) return 1;    // 자메이카, 아이티, 과테말라 등
+                    if (area <= 50) return 1.2;  // 코스타리카 등
+                    return 2;                    // 미국, 브라질 등 거대 국가
+                })
+                .style('fill', '#1c1917')
+                .style('stroke', '#ffffff')
+                .style('stroke-width', d => {
+                    const area = countryInfo[d.properties.name].rawArea;
+                    return area <= 15 ? '0.2px' : '0.5px';
+                })
+                .style('pointer-events', 'none');
+                
+            // 대양 이름
+            const oceanStyle = { "fill": "#a8a29e", "font-size": "24px", "font-weight": "700", "letter-spacing": "8px", "opacity": "0.4", "pointer-events": "none", "text-anchor": "middle" };
+            
+            g.append("text").attr("x", projection([-105, 0])[0]).attr("y", projection([-105, 0])[1]).text("태평양")
+             .style("fill", oceanStyle.fill).style("font-size", oceanStyle["font-size"]).style("letter-spacing", oceanStyle["letter-spacing"]).style("opacity", oceanStyle.opacity).attr("text-anchor", oceanStyle["text-anchor"]).style("pointer-events", "none");
+
+            g.append("text").attr("x", projection([-40, 15])[0]).attr("y", projection([-40, 15])[1]).text("대서양")
+             .style("fill", oceanStyle.fill).style("font-size", oceanStyle["font-size"]).style("letter-spacing", oceanStyle["letter-spacing"]).style("opacity", oceanStyle.opacity).attr("text-anchor", oceanStyle["text-anchor"]).style("pointer-events", "none");
+
+            g.append("text").attr("x", projection([-89, 23])[0]).attr("y", projection([-89, 23])[1]).text("멕시코만")
+             .style("fill", oceanStyle.fill).style("font-size", "12px").style("font-weight", "700").style("letter-spacing", "3px").style("opacity", oceanStyle.opacity).attr("text-anchor", "middle").style("pointer-events", "none");
+
+            // 적도
+            g.append("path")
+             .datum({type: "LineString", coordinates: [[-140, 0], [-30, 0]]})
+             .attr("d", pathGenerator)
+             .attr("stroke", "#dc2626")
+             .attr("stroke-width", 1.5)
+             .attr("stroke-dasharray", "4,4")
+             .attr("fill", "none")
+             .style("opacity", 0.6)
+             .style("pointer-events", "none");
+
+            g.append("text")
+             .attr("x", projection([-140, 0])[0] - 8)
+             .attr("y", projection([-140, 0])[1])
+             .text("적도 (0°)")
+             .style("fill", "#dc2626")
+             .style("font-size", "12px")
+             .style("font-weight", "700")
+             .style("letter-spacing", "1px")
+             .attr("text-anchor", "end")
+             .attr("dominant-baseline", "central")
+             .style("opacity", 0.8)
+             .style("pointer-events", "none");
+
+            const organicLine = d3.line()
+                .curve(d3.curveBasis) 
+                .x(d => projection(d)[0])
+                .y(d => projection(d)[1]);
+
+            const organicPolygon = d3.line()
+                .curve(d3.curveBasisClosed) 
+                .x(d => projection(d)[0])
+                .y(d => projection(d)[1]);
+
+            g.selectAll('path.terrain-shape')
+                .data(terrainFeatures)
+                .enter()
+                .append('path')
+                .attr('class', d => `terrain-feature terrain-shape terrain-shape-${d.type} group-${d.groupId}`)
+                .attr('id', d => `shape-${d.id}`)
+                .attr('d', d => {
+                    if (d.type === 'mountain' || d.type.startsWith('river')) {
+                        return organicLine(d.geometry.coordinates);
+                    }
+                    return organicPolygon(d.geometry.coordinates[0]);
+                })
+                .style('display', showTerrain ? 'block' : 'none')
+                .on('click', handleTerrainClick);
+
+            g.selectAll('text.terrain-text')
+                .data(terrainFeatures.filter(d => d.name))
+                .enter()
+                .append('text')
+                .attr('class', d => `terrain-feature terrain-text terrain-text-${d.type} group-${d.groupId}`)
+                .attr('id', d => `text-${d.id}`)
+                .attr('transform', d => `translate(${projection(d.labelCoords)[0]}, ${projection(d.labelCoords)[1]}) rotate(${d.labelRotate})`)
+                .text(d => d.name)
+                .attr('text-anchor', 'middle')
+                .attr('dominant-baseline', 'central')
+                .style('display', showTerrain ? 'block' : 'none')
+                .on('click', handleTerrainClick);
+
+            d3Map = g;
+            highlightSelectedCountry();
+            
+            if(showTerrain && currentMode === 'study') {
+                d3.selectAll('.terrain-feature').style('display', 'block');
+            }
+        }
+        
+        // 지형 클릭 시: 정보 패널 연결 및 상태 업데이트
+        function handleTerrainClick(event, d) {
+            event.stopPropagation(); 
+            
+            // 기존 선택 해제
+            d3.selectAll('.terrain-active').classed('terrain-active', false);
+            d3.selectAll('.country').classed('active', false); 
+            selectedCountryId = null; // 국가 정보 끄기
+            
+            // 클릭한 지형 그룹 활성화
+            const targetGroupId = d.groupId || d.id;
+            d3.selectAll(`.group-${targetGroupId}`).classed('terrain-active', true);
+
+            // 해당 그룹의 메인 정보(이름이 있는 객체)를 찾아 패널용 데이터로 저장
+            selectedTerrain = terrainFeatures.find(f => (f.id === targetGroupId || f.groupId === targetGroupId) && f.name !== "");
+            
+            // 정보 패널 렌더링
+            if(currentMode === 'study') {
+                renderPanel();
+            }
+        }
+        
+        // 레이어 버튼 토글 함수 (지도를 가리지 않도록 안내는 우측 패널에 표시)
+        function toggleTerrain() {
+            showTerrain = !showTerrain;
+            d3.selectAll('.terrain-feature').style('display', showTerrain ? 'block' : 'none');
+            
+            const btnSpan = document.getElementById('layer-toggle-text');
+            const btnIcon = document.getElementById('layer-toggle-icon');
+            
+            if(showTerrain) {
+                btnSpan.innerText = '자연환경 끄기';
+                btnIcon.className = 'fas fa-eye-slash text-blue-500 mr-1';
+            } else {
+                btnSpan.innerText = '자연환경 보기';
+                btnIcon.className = 'fas fa-layer-group text-stone-500 mr-1';
+                
+                d3.selectAll('.terrain-active').classed('terrain-active', false);
+                // 지형이 꺼지면 지형 정보창도 리셋
+                if(selectedTerrain) {
+                    selectedTerrain = null;
+                }
+            }
+
+            // 패널을 다시 그려서 자연환경 클릭 안내 문구를 띄우거나 없앰
+            if (currentMode === 'study') {
+                renderPanel();
+            }
+        }
+
+        function highlightSelectedCountry() {
+            if (!selectedCountryId) return;
+            const info = countryInfo[selectedCountryId];
+
+            if (currentMode === 'worldcup' && info && info.wcGroup.includes('조')) {
+                const targetGroup = info.wcGroup.substring(0, 2);
+                
+                d3.selectAll('.country').classed('wc-group-active', d => {
+                    const cInfo = countryInfo[d.properties.name];
+                    return cInfo && cInfo.wcGroup && cInfo.wcGroup.substring(0, 2) === targetGroup && d.properties.name !== selectedCountryId;
+                });
+                
+                d3.select(`#country-${selectedCountryId.replace(/\s+/g, '-')}`).classed('active', true);
+
+            } else if (currentMode === 'battle') {
+                d3.select(`#country-${selectedCountryId.replace(/\s+/g, '-')}`).classed('active', true);
+                if(battleOpponents.length > 0) {
+                    battleOpponents.forEach((opp, idx) => {
+                        d3.select(`#country-${opp.replace(/\s+/g, '-')}`).classed(`battle-target-${idx}`, true);
+                    });
+                }
+            } else if (currentMode === 'battle_arena') {
+                d3.select(`#country-${selectedCountryId.replace(/\s+/g, '-')}`).classed('active', true);
+                if (currentOpponentId) {
+                    const oppIdx = battleOpponents.indexOf(currentOpponentId);
+                    const targetClass = oppIdx !== -1 ? `battle-target-${oppIdx}` : 'battle-target-0';
+                    d3.select(`#country-${currentOpponentId.replace(/\s+/g, '-')}`).classed(targetClass, true);
+                }
+            } else {
+                d3.select(`#country-${selectedCountryId.replace(/\s+/g, '-')}`).classed('active', true);
+            }
+        }
+
+        function goHome() {
+            stopQuizTimer(); 
+            isAnimating = false;
+            currentMode = 'home';
+            selectedCountryId = null;
+            selectedTerrain = null;
+            battleOpponents = [];
+            
+            const homeScreen = document.getElementById('home-screen');
+            homeScreen.style.display = 'flex';
+            setTimeout(() => { homeScreen.style.opacity = '1'; }, 10);
+            
+            resetMapStyles();
+            d3.selectAll('.country').attr('fill', d => getCountryColor(d));
+            
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('map-legend').style.display = 'none';
+            d3.selectAll('.capital-dot').style('display', 'none');
+            
+            document.getElementById('layer-toggle-btn').style.display = 'none';
+            showTerrain = false;
+            d3.selectAll('.terrain-feature').style('display', 'none');
+            d3.selectAll('.terrain-active').classed('terrain-active', false);
+            document.getElementById('layer-toggle-text').innerText = '자연환경 보기';
+            document.getElementById('layer-toggle-icon').className = 'fas fa-layer-group text-stone-500 mr-1';
+            
+            document.getElementById('panel-container').innerHTML = '';
+        }
+
+        function startApp(mode) {
+            const homeScreen = document.getElementById('home-screen');
+            homeScreen.style.opacity = '0';
+            setTimeout(() => {
+                homeScreen.style.display = 'none';
+                switchMode(mode);
+            }, 500); 
+        }
+
+        function switchMode(mode) {
+            stopQuizTimer(); 
+            isAnimating = false;
+            currentMode = mode;
+            battleOpponents = [];
+            currentOpponentId = null;
+            battleState = 'select_stat';
+            selectedTerrain = null;
+            
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            const activeBtn = document.getElementById(`btn-${mode}`);
+            if(activeBtn) activeBtn.classList.add('active');
+
+            const mapLegend = document.getElementById('map-legend');
+            mapLegend.style.display = 'block';
+            d3.selectAll('.capital-dot').style('display', 'block');
+            
+            const layerBtn = document.getElementById('layer-toggle-btn');
+
+            if (mode === 'study') {
+                layerBtn.style.display = 'block';
+            } else {
+                layerBtn.style.display = 'none';
+                showTerrain = false;
+                d3.selectAll('.terrain-feature').style('display', 'none');
+                d3.selectAll('.terrain-active').classed('terrain-active', false);
+                document.getElementById('layer-toggle-text').innerText = '자연환경 보기';
+                document.getElementById('layer-toggle-icon').className = 'fas fa-layer-group text-stone-500 mr-1';
+            }
+
+            if(mode === 'study') {
+                mapLegend.innerHTML = '<i class="fas fa-circle text-[8px] mr-1"></i> 각국의 수도 위치';
+                resetMapStyles();
+                highlightSelectedCountry();
+            } else if (mode === 'worldcup') {
+                mapLegend.innerHTML = '<strong class="text-stone-800">대한민국 FIFA 랭킹: 23위</strong>';
+                resetMapStyles();
+                highlightSelectedCountry();
+            } else if (mode === 'battle') {
+                mapLegend.innerHTML = '기준 국가를 먼저 선택하세요';
+                resetMapStyles();
+                if(selectedCountryId) generateBattleOpponents();
+                highlightSelectedCountry();
+            } else { // quiz
+                d3.selectAll('.capital-dot').style('display', 'none');
+                mapLegend.style.display = 'none';
+                startQuiz();
+            }
+            
+            d3.selectAll('.country').attr('fill', d => getCountryColor(d));
+            renderPanel();
+        }
+
+        function startQuiz() {
+            resetMapStyles();
+            selectedCountryId = null;
+            score = 0;
+            currentQIndex = 0;
+            
+            const availableCountries = Object.keys(countryInfo);
+            for (let i = availableCountries.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [availableCountries[i], availableCountries[j]] = [availableCountries[j], availableCountries[i]];
+            }
+            quizQuestions = availableCountries.slice(0, 10);
+            renderPanel();
+            startQuizTimer(); 
+        }
+
+        function generateBattleOpponents() {
+            if(!selectedCountryId) return;
+            const allIds = Object.keys(countryInfo);
+            let pool = allIds.filter(id => id !== selectedCountryId);
+            
+            for (let i = pool.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [pool[i], pool[j]] = [pool[j], pool[i]];
+            }
+            battleOpponents = pool.slice(0, 3);
+        }
+
+        function handleCountryClick(event, feature) {
+            if (isAnimating) return;
+            event.stopPropagation(); 
+
+            d3.selectAll('.terrain-active').classed('terrain-active', false);
+            selectedTerrain = null;
+
+            const countryId = feature.properties.name;
+
+            if (currentMode === 'study' || currentMode === 'worldcup' || currentMode === 'battle') {
+                if(!countryInfo[countryId]) return; 
+                
+                // 이미 선택된 국가를 다시 클릭한 경우 (선택 해제 토글 기능)
+                if (selectedCountryId === countryId) {
+                    selectedCountryId = null;
+                    if (currentMode === 'battle') battleOpponents = [];
+                } else {
+                    // 새로운 국가를 클릭한 경우
+                    selectedCountryId = countryId;
+                    if (currentMode === 'battle') generateBattleOpponents();
+                }
+
+                d3.selectAll('.country').attr('fill', d => getCountryColor(d));
+                resetMapStyles();
+                highlightSelectedCountry();
+                renderPanel();
+
+            } else if (currentMode === 'quiz') {
+                stopQuizTimer(); 
+                const targetId = quizQuestions[currentQIndex];
+                const clickedEl = d3.select(`#country-${countryId.replace(/\s+/g, '-')}`);
+                const targetEl = d3.select(`#country-${targetId.replace(/\s+/g, '-')}`);
+
+                isAnimating = true;
+
+                if (countryId === targetId) {
+                    clickedEl.classed('correct', true);
+                    score += 10;
+                    showQuizFeedback('correct');
+                    setTimeout(nextQuestion, 1500);
+                } else {
+                    clickedEl.classed('wrong', true);
+                    targetEl.classed('correct', true);
+                    showQuizFeedback('wrong', countryId); 
+                }
+            }
+        }
+
+        function nextQuestion() {
+            resetMapStyles();
+            currentQIndex++;
+            isAnimating = false;
+            
+            if (currentQIndex >= quizQuestions.length) {
+                currentMode = 'result';
+                renderPanel();
+            } else {
+                renderPanel();
+                startQuizTimer(); 
+            }
+        }
+
+        function resetMapStyles() {
+            d3.selectAll('.country')
+              .classed('active', false)
+              .classed('correct', false)
+              .classed('wrong', false)
+              .classed('wc-group-active', false)
+              .classed('battle-target-0', false)
+              .classed('battle-target-1', false)
+              .classed('battle-target-2', false);
+        }
+
+        function startQuizTimer() {
+            clearInterval(quizTimerInterval);
+            quizTimeRemaining = 10;
+            updateTimerUI();
+            
+            quizTimerInterval = setInterval(() => {
+                quizTimeRemaining--;
+                updateTimerUI();
+                
+                if (quizTimeRemaining <= 0) {
+                    clearInterval(quizTimerInterval);
+                    handleQuizTimeout();
+                }
+            }, 1000);
+        }
+
+        function stopQuizTimer() {
+            clearInterval(quizTimerInterval);
+        }
+
+        function updateTimerUI() {
+            const timeText = document.getElementById('quiz-time-text');
+            const timeBar = document.getElementById('quiz-time-bar');
+            if (timeText && timeBar) {
+                timeText.innerText = quizTimeRemaining;
+                const percentage = (quizTimeRemaining / 10) * 100;
+                timeBar.style.width = `${percentage}%`;
+                
+                if (quizTimeRemaining <= 3) {
+                    timeBar.classList.remove('bg-blue-600');
+                    timeBar.classList.add('bg-red-600');
+                    timeText.classList.add('text-red-600');
+                } else {
+                    timeBar.classList.add('bg-blue-600');
+                    timeBar.classList.remove('bg-red-600');
+                    timeText.classList.remove('text-red-600');
+                }
+            }
+        }
+
+        function handleQuizTimeout() {
+            isAnimating = true; 
+            const targetId = quizQuestions[currentQIndex];
+            const targetEl = d3.select(`#country-${targetId.replace(/\s+/g, '-')}`);
+            
+            targetEl.classed('correct', true); 
+            showQuizFeedback('timeout');
+        }
+
+        function startBattleMatch(opponentId) {
+            currentMode = 'battle_arena';
+            currentOpponentId = opponentId;
+            battleState = 'select_stat';
+            pendingStatKey = null;
+            
+            d3.selectAll('.country').attr('fill', d => getCountryColor(d));
+            resetMapStyles();
+            highlightSelectedCountry();
+            renderPanel();
+        }
+
+        function selectBattleStat(statKey) {
+            if (battleState !== 'select_stat') return;
+            pendingStatKey = statKey;
+            battleState = 'guess';
+            
+            const statName = statKey === 'rawArea' ? '영토 면적' : (statKey === 'rawPop' ? '인구수' : 'GDP (경제 규모)');
+            
+            document.getElementById('battle-prompt').innerHTML = `
+                <div class="bg-blue-50 border border-blue-100 p-4 rounded-lg">
+                    <span class="text-sm font-bold text-blue-700 tracking-wide block mb-1">🤔 나의 예측은?</span>
+                    <span class="text-base text-stone-900 block">
+                        두 국가 중 <b>[${statName}]</b> 수치가 더 높을 것 같은<br>
+                        <strong class="text-blue-600 underline decoration-blue-300 underline-offset-4 cursor-pointer">국가의 카드를 클릭</strong>해서 결과를 맞춰보세요!
+                    </span>
+                </div>
+            `;
+            
+            document.getElementById('stat-buttons-container').style.display = 'none';
+            
+            const card1 = document.getElementById('card-1');
+            const card2 = document.getElementById('card-2');
+            card1.classList.add('border-blue-400', 'ring-2', 'ring-blue-200', 'cursor-pointer', 'transform', 'hover:scale-105');
+            card2.classList.add('border-blue-400', 'ring-2', 'ring-blue-200', 'cursor-pointer', 'transform', 'hover:scale-105');
+        }
+
+        function handleCardClick(guessedPlayerNum) {
+            if (battleState !== 'guess') return;
+            battleState = 'revealed';
+            
+            const card1 = document.getElementById('card-1');
+            const card2 = document.getElementById('card-2');
+            card1.classList.remove('border-blue-400', 'ring-2', 'ring-blue-200', 'cursor-pointer', 'transform', 'hover:scale-105');
+            card2.classList.remove('border-blue-400', 'ring-2', 'ring-blue-200', 'cursor-pointer', 'transform', 'hover:scale-105');
+            
+            document.getElementById('battle-prompt').innerHTML = `<span class="text-stone-400 text-sm tracking-widest block mt-4">데이터를 분석하고 있습니다...</span>`;
+            
+            executeBattleOutcome(guessedPlayerNum);
+        }
+
+        function executeBattleOutcome(guessedPlayerNum) {
+            const player1 = countryInfo[selectedCountryId];
+            const player2 = countryInfo[currentOpponentId];
+            
+            const val1 = player1[pendingStatKey];
+            const val2 = player2[pendingStatKey];
+
+            setTimeout(() => {
+                document.getElementById('stat-display-1').innerHTML = `<span class="text-xl md:text-2xl font-black text-blue-700 break-keep">${getStatDisplayString(player1, pendingStatKey)}</span>`;
+                document.getElementById('stat-display-2').innerHTML = `<span class="text-xl md:text-2xl font-black text-blue-700 break-keep">${getStatDisplayString(player2, pendingStatKey)}</span>`;
+
+                let actualWinner = 0;
+                if (pendingStatKey === 'rawGdp') {
+                    if (val1 < val2) actualWinner = 1;
+                    else if (val2 < val1) actualWinner = 2;
+                } else {
+                    if (val1 > val2) actualWinner = 1;
+                    else if (val2 > val1) actualWinner = 2;
+                }
+
+                let isCorrect = false;
+                if (actualWinner !== 0 && actualWinner === guessedPlayerNum) {
+                    isCorrect = true;
+                    battleScore += 10;
+                    document.getElementById('battle-score-display').innerText = battleScore;
+                }
+
+                if (actualWinner === 1) {
+                    document.getElementById('card-1').classList.add('battle-winner');
+                    document.getElementById('card-2').classList.add('battle-loser');
+                    document.getElementById('goal-fx-1').style.display = 'block';
+                } else if (actualWinner === 2) {
+                    document.getElementById('card-2').classList.add('battle-winner');
+                    document.getElementById('card-1').classList.add('battle-loser');
+                    document.getElementById('goal-fx-2').style.display = 'block';
+                }
+
+                showBattleFeedback(pendingStatKey, player1, player2, actualWinner, isCorrect);
+
+            }, 400);
+        }
+
+        function getStatDisplayString(player, statKey) {
+            if(statKey === 'rawArea') return player.area.replace('약 ', '');
+            if(statKey === 'rawPop') return player.pop.replace('약 ', '');
+            if(statKey === 'rawGdp') return player.gdp;
+            return "";
+        }
+
+        function showBattleFeedback(statKey, p1, p2, actualWinner, isCorrect) {
+            const fbBox = document.getElementById('battle-feedback');
+            fbBox.style.display = 'block';
+
+            let subject = statKey === 'rawArea' ? '영토 면적이' : (statKey === 'rawPop' ? '인구가' : 'GDP(경제 규모)가');
+            let winnerObj = actualWinner === 1 ? p1 : (actualWinner === 2 ? p2 : null);
+            let loserObj = actualWinner === 1 ? p2 : (actualWinner === 2 ? p1 : null);
+
+            let winnerText = winnerObj ? `${winnerObj.ko} 우위` : "동일 수준";
+            let msg = "";
+
+            if (winnerObj && loserObj) {
+                if (statKey === 'rawGdp') {
+                    if (loserObj.rawGdp === 999) {
+                        msg = `<strong>${winnerObj.ko}</strong>(${winnerObj.gdp})이 통계 확인이 어려운 <strong>${loserObj.ko}</strong> 대비 높은 경제 규모를 기록합니다.`;
+                    } else {
+                        let diff = loserObj.rawGdp - winnerObj.rawGdp;
+                        msg = `<strong>${winnerObj.ko}</strong>(${winnerObj.gdp})이 <strong>${loserObj.ko}</strong>(${loserObj.gdp}) 대비 세계 순위에서 <strong>${diff}단계</strong> 앞섭니다.`;
+                    }
+                } else {
+                    let ratio = (winnerObj[statKey] / loserObj[statKey]).toFixed(1);
+                    if(ratio >= 1.5) {
+                        msg = `데이터 분석 결과, <strong>${winnerObj.ko}</strong>의 ${subject} <strong>${loserObj.ko}</strong> 대비 <strong>약 ${ratio}배</strong> 더 큰 규모를 보입니다.`;
+                    } else {
+                        msg = `<strong>${winnerObj.ko}</strong>의 ${subject} <strong>${loserObj.ko}</strong>에 비해 소폭 (약 ${ratio}배) 앞서고 있습니다.`;
+                    }
+                }
+            } else {
+                msg = `통계상 양국의 스탯 차이가 미미합니다.`;
+            }
+
+            let predictionResultHTML = isCorrect 
+                ? `<span class="text-green-700 font-bold text-sm tracking-wide"><i class="fas fa-check-circle"></i> 예측 성공 (+10점)</span>`
+                : `<span class="text-stone-400 font-bold text-sm tracking-wide"><i class="fas fa-times-circle"></i> 예측 실패</span>`;
+
+            fbBox.innerHTML = `
+                <div class="border-t border-stone-200 pt-6 mt-4">
+                    <div class="mb-3">${predictionResultHTML}</div>
+                    <h4 class="text-xl font-bold text-stone-900 mb-2">${winnerText}</h4>
+                    <p class="text-sm text-stone-600 leading-relaxed mb-6">${msg}</p>
+                    <button onclick="switchMode('battle')" class="w-full py-3 bg-stone-900 text-white font-medium text-sm hover:bg-stone-800 transition-colors rounded-md shadow-sm">
+                        다른 국가와 다시 대결하기
+                    </button>
+                </div>
+            `;
+        }
+
+        function renderPanel() {
+            const panel = document.getElementById('panel-container');
+            
+            if (currentMode === 'study') {
+                // 지형이 선택되었을 때의 패널 UI 렌더링
+                if (selectedTerrain) {
+                    const info = selectedTerrain;
+                    let typeName = "";
+                    let icon = "";
+                    
+                    if(info.type === 'mountain') { typeName = "산맥"; icon = "fa-mountain text-stone-600"; }
+                    else if(info.type === 'river') { typeName = "하천"; icon = "fa-water text-blue-500"; }
+                    else if(info.type === 'plain') { typeName = "평원/분지"; icon = "fa-leaf text-green-600"; }
+                    else if(info.type === 'highland') { typeName = "고원"; icon = "fa-image text-amber-600"; }
+                    else if(info.type === 'desert') { typeName = "사막"; icon = "fa-sun text-yellow-600"; }
+                    
+                    panel.innerHTML = `
+                        <div class="p-8">
+                            <div class="mb-8 border-b border-stone-200 pb-6">
+                                <span class="block text-xs font-bold tracking-widest text-stone-400 uppercase mb-1">PHYSICAL GEOGRAPHY</span>
+                                <div class="flex items-center gap-3 mb-4">
+                                    <div class="w-10 h-10 rounded-full bg-stone-100 flex items-center justify-center">
+                                        <i class="fas ${icon}"></i>
+                                    </div>
+                                    <h2 class="text-3xl font-bold text-stone-900">${info.name}</h2>
+                                    <a href="https://www.google.com/search?tbm=isch&q=${encodeURIComponent(info.name + ' 경관')}" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1 bg-stone-100 text-stone-500 hover:bg-stone-900 hover:text-white text-xs font-bold rounded-full transition-colors duration-200" title="${info.name} 경관 구글 이미지 검색 (새 창)">
+                                        <i class="fas fa-camera"></i> 사진 보기
+                                    </a>
+                                </div>
+                                <span class="inline-block px-3 py-1 bg-stone-100 text-stone-600 text-xs font-bold rounded-full">${typeName}</span>
+                            </div>
+                            
+                            <div>
+                                <span class="block text-xs font-medium text-stone-400 tracking-wider mb-2">지형 특징</span>
+                                <p class="text-sm text-stone-700 leading-relaxed">${info.desc}</p>
+                            </div>
+                            
+                            <div class="mt-8">
+                                <button onclick="selectedTerrain = null; renderPanel();" class="text-sm text-blue-600 font-bold hover:underline">
+                                    <i class="fas fa-arrow-left mr-1"></i> 이전 화면으로
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // 국가도, 지형도 선택되지 않았을 때의 기본 화면
+                if (!selectedCountryId) {
+                    let extraGuide = showTerrain ? `
+                        <div class="mt-8 bg-blue-50 border border-blue-100 p-4 rounded-xl text-blue-800 shadow-sm animate-pulse w-full max-w-sm text-left">
+                            <span class="block text-sm font-bold mb-2"><i class="fas fa-map-marked-alt mr-1"></i> 자연환경 탐색 모드 켜짐</span>
+                            <span class="text-xs font-medium leading-relaxed block">지도 위에 나타난 산맥, 하천, 평원 등을 <b>클릭</b>해 보세요!<br>해당 지형이 진하게 표시되며 상세 설명과 사진을 볼 수 있습니다.</span>
+                        </div>
+                    ` : '';
+
+                    panel.innerHTML = `
+                        <div class="flex flex-col items-center justify-center h-full text-center p-10 text-stone-500">
+                            <div class="bg-stone-100 p-4 rounded-full mb-4">
+                                <i class="fas fa-hand-pointer text-2xl text-stone-400"></i>
+                            </div>
+                            <span class="block text-2xl font-light text-stone-700 mb-2">지리 데이터 탐색</span>
+                            <p class="text-sm text-stone-500">왼쪽 지도에서 아메리카 국가를 클릭하면<br>해당 국가의 상세 정보가 나타납니다.</p>
+                            ${extraGuide}
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // 국가가 선택되었을 때의 패널 UI 렌더링
+                const info = countryInfo[selectedCountryId];
+                panel.innerHTML = `
+                    <div class="p-8">
+                        <div class="mb-8">
+                            <p class="text-xs font-bold tracking-widest text-stone-400 uppercase mb-1">${selectedCountryId}</p>
+                            <div class="flex items-center gap-3 mb-4">
+                                <h2 class="text-4xl font-light text-stone-900">${info.ko}</h2>
+                                <a href="https://www.google.com/search?tbm=isch&q=${encodeURIComponent(info.ko + ' 명소')}" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1 bg-stone-100 text-stone-500 hover:bg-stone-900 hover:text-white text-xs font-bold rounded-full transition-colors duration-200" title="${info.ko} 명소 구글 이미지 검색 (새 창)">
+                                    <i class="fas fa-camera"></i> 사진 보기
+                                </a>
+                            </div>
+                            <img src="${info.img}" alt="${info.ko} 국기" class="w-16 h-auto object-contain border border-stone-200 mb-4 block">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-y-6 gap-x-4 border-t border-b border-stone-200 py-6 mb-6">
+                            <div>
+                                <span class="block text-xs font-medium text-stone-400 tracking-wider mb-1">수도</span>
+                                <span class="block text-sm text-stone-900">${info.capital}</span>
+                            </div>
+                            <div>
+                                <span class="block text-xs font-medium text-stone-400 tracking-wider mb-1">주요 언어</span>
+                                <span class="block text-sm text-stone-900">${info.lang}</span>
+                            </div>
+                            <div>
+                                <span class="block text-xs font-medium text-stone-400 tracking-wider mb-1">인구</span>
+                                <span class="block text-sm text-stone-900">${info.pop}</span>
+                                <span class="block text-xs text-stone-400 mt-1">한국: 약 5,100만</span>
+                            </div>
+                            <div>
+                                <span class="block text-xs font-medium text-stone-400 tracking-wider mb-1">영토 면적</span>
+                                <span class="block text-sm text-stone-900">${info.area}</span>
+                                <span class="block text-xs text-stone-400 mt-1">한국: 약 10만 km²</span>
+                            </div>
+                            <div class="col-span-2">
+                                <span class="block text-xs font-medium text-stone-400 tracking-wider mb-1">GDP(국내총생산) 순위</span>
+                                <span class="block text-sm text-stone-900">${info.gdp}</span>
+                                <span class="block text-xs text-stone-400 mt-1">한국: 세계 14위</span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <span class="block text-xs font-medium text-stone-400 tracking-wider mb-2">국가 개요</span>
+                            <p class="text-sm text-stone-700 leading-relaxed">${info.desc}</p>
+                        </div>
+                    </div>
+                `;
+            } else if (currentMode === 'worldcup') {
+                if (!selectedCountryId) {
+                    panel.innerHTML = `
+                        <div class="flex flex-col items-center justify-center h-full text-center p-10 text-stone-500">
+                            <div class="bg-stone-100 p-4 rounded-full mb-4">
+                                <i class="fas fa-futbol text-2xl text-stone-400"></i>
+                            </div>
+                            <span class="block text-2xl font-light text-stone-700 mb-2">월드컵 조편성</span>
+                            <p class="text-sm text-stone-500 mb-8">지도에서 국가를 클릭하여<br>2026 월드컵의 조별리그 상대국을 확인하세요.</p>
+                            
+                            <div class="bg-blue-50 border border-blue-100 rounded-xl p-6 text-left w-full max-w-sm shadow-sm">
+                                <span class="block text-sm font-bold text-blue-800 mb-4 flex items-center gap-2">
+                                    <i class="fas fa-palette"></i> 지도 색상 범례
+                                </span>
+                                <ul class="text-sm text-blue-800 space-y-3 font-medium">
+                                    <li class="flex items-center"><span class="inline-block w-4 h-4 rounded bg-[#93c5fd] mr-3 border border-blue-200"></span>본선 진출 성공 국가</li>
+                                    <li class="flex items-center"><span class="inline-block w-4 h-4 rounded bg-[#e7e5e4] mr-3 border border-stone-300"></span>본선 진출 실패 국가</li>
+                                    <li class="flex items-center"><span class="inline-block w-4 h-4 rounded bg-[#292524] mr-3"></span>선택한 기준 국가</li>
+                                    <li class="flex items-center"><span class="inline-block w-4 h-4 rounded bg-[#0f766e] mr-3"></span>같은 조 편성 국가</li>
+                                </ul>
+                            </div>
+                        </div>
+                    `;
+                    return;
+                }
+                const info = countryInfo[selectedCountryId];
+                panel.innerHTML = `
+                    <div class="p-8">
+                        <div class="mb-8">
+                            <p class="text-xs font-bold tracking-widest text-stone-400 uppercase mb-1">2026 WORLD CUP</p>
+                            <h2 class="text-4xl font-light text-stone-900">${info.ko}</h2>
+                        </div>
+
+                        <div class="bg-stone-50 border border-stone-200 p-6 mb-6 rounded-lg">
+                            <div class="mb-6 pb-6 border-b border-stone-200">
+                                <span class="block text-xs font-medium text-stone-400 tracking-wider mb-1">FIFA RANKING</span>
+                                <span class="block text-3xl font-bold text-stone-900">${info.fifa}</span>
+                            </div>
+                            <div class="mb-6">
+                                <span class="block text-xs font-medium text-stone-400 tracking-wider mb-1">GROUP</span>
+                                <span class="block text-xl font-medium text-stone-900">${info.wcGroup}</span>
+                            </div>
+                            <div>
+                                <span class="block text-xs font-medium text-stone-400 tracking-wider mb-2">OPPONENTS</span>
+                                <p class="text-sm text-stone-700 leading-relaxed font-bold">${info.wcOpponents}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-blue-50 border border-blue-100 rounded-lg p-4">
+                            <p class="text-xs text-blue-800 leading-relaxed">
+                                💡 본선 진출국은 <strong>푸른색</strong>, 진출 실패국은 <strong>회색</strong>입니다.<br>
+                                지도에서 선택한 국가는 <strong>검은색</strong>으로, 같은 조에 편성된 상대 국가는 <strong>청록색</strong>으로 표시됩니다.
+                            </p>
+                        </div>
+                    </div>
+                `;
+            } else if (currentMode === 'battle') {
+                if (!selectedCountryId) {
+                    panel.innerHTML = `
+                        <div class="flex flex-col items-center justify-center h-full text-center p-10 text-stone-500">
+                            <div class="bg-stone-100 p-4 rounded-full mb-4">
+                                <i class="fas fa-hand-pointer text-2xl text-stone-400"></i>
+                            </div>
+                            <span class="block text-2xl font-light text-stone-700 mb-2">기준 국가 선택</span>
+                            <p class="text-sm text-stone-500">가장 먼저 왼쪽 지도에서<br>기준이 될 국가를 하나 선택해주세요.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const player = countryInfo[selectedCountryId];
+                const colors = ['bg-red-700', 'bg-blue-700', 'bg-amber-700']; 
+                
+                let opponentsHTML = battleOpponents.map((oppId, idx) => {
+                    let op = countryInfo[oppId];
+                    return `
+                        <div class="border border-stone-200 p-4 flex justify-between items-center group hover:border-stone-400 transition-colors bg-white rounded-md shadow-sm">
+                            <div class="flex items-center gap-3">
+                                <div class="w-3 h-3 rounded-full ${colors[idx]}"></div>
+                                <span class="text-sm font-bold text-stone-900">${op.ko}</span>
+                            </div>
+                            <button onclick="startBattleMatch('${oppId}')" class="px-3 py-1.5 bg-stone-100 text-xs font-bold text-stone-600 group-hover:bg-stone-900 group-hover:text-white transition-colors rounded">
+                                선택하기
+                            </button>
+                        </div>
+                    `;
+                }).join('');
+
+                panel.innerHTML = `
+                    <div class="p-8">
+                        <div class="mb-8 border-b border-stone-200 pb-6">
+                            <span class="block text-xs font-bold tracking-widest text-stone-400 uppercase mb-1">BASE COUNTRY</span>
+                            <h2 class="text-3xl font-light text-stone-900 flex items-center gap-3">
+                                ${player.ko}
+                            </h2>
+                        </div>
+                        
+                        <div class="bg-stone-50 p-5 rounded-lg border border-stone-200">
+                            <span class="block text-sm font-bold text-stone-700 mb-1">👉 상대 국가 선택</span>
+                            <p class="text-xs text-stone-500 mb-4">아래 매칭된 국가 중 대결을 펼칠 상대를 고르세요.</p>
+                            <div class="space-y-3">
+                                ${opponentsHTML}
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+            } else if (currentMode === 'battle_arena') {
+                const p1 = countryInfo[selectedCountryId];
+                const p2 = countryInfo[currentOpponentId];
+
+                panel.innerHTML = `
+                    <div class="p-8 h-full flex flex-col">
+                        <div class="flex justify-between items-end mb-8 pb-4 border-b border-stone-200">
+                            <div>
+                                <span class="block text-xs font-bold tracking-widest text-stone-400 uppercase mb-1">SIMULATION</span>
+                                <h2 class="text-2xl font-bold text-stone-900">통계 배틀</h2>
+                            </div>
+                            <div class="text-right bg-stone-100 px-3 py-1.5 rounded-lg border border-stone-200">
+                                <span class="text-xs font-bold text-stone-500 mr-2">누적 점수</span>
+                                <span id="battle-score-display" class="text-lg font-bold text-blue-600">${battleScore}</span><span class="text-sm text-stone-500 ml-1">점</span>
+                            </div>
+                        </div>
+                        
+                        <div id="battle-prompt" class="mb-6 text-center">
+                            <span class="text-sm font-bold text-stone-700 block bg-stone-100 p-3 rounded-md">👇 아래 버튼을 눌러 비교할 통계를 선택하세요.</span>
+                        </div>
+
+                        <!-- 양국 카드 (UI 구조 변경) -->
+                        <div class="grid grid-cols-2 gap-4 mb-6">
+                            <div id="card-1" class="border border-stone-200 p-5 bg-white relative transition-all rounded-lg shadow-sm flex flex-col items-center text-center" onclick="handleCardClick(1)">
+                                <div id="goal-fx-1" class="absolute top-2 right-2 hidden">
+                                    <span class="text-xs font-bold text-red-600 bg-red-50 border border-red-200 px-2 py-1 rounded shadow-sm">WINNER</span>
+                                </div>
+                                <span class="block text-xs font-bold text-stone-400 mb-2 w-full border-b border-stone-100 pb-2">나의 국가</span>
+                                <h3 class="font-bold text-xl text-stone-900 mb-4 break-keep">${p1.ko}</h3>
+                                <div id="stat-display-1" class="w-full mt-auto bg-stone-50 border border-stone-100 rounded-md py-3 px-2 flex items-center justify-center min-h-[4rem]">
+                                    <span class="text-2xl font-light text-stone-300">?</span>
+                                </div>
+                            </div>
+
+                            <div id="card-2" class="border border-stone-200 p-5 bg-white relative transition-all rounded-lg shadow-sm flex flex-col items-center text-center" onclick="handleCardClick(2)">
+                                <div id="goal-fx-2" class="absolute top-2 right-2 hidden">
+                                    <span class="text-xs font-bold text-red-600 bg-red-50 border border-red-200 px-2 py-1 rounded shadow-sm">WINNER</span>
+                                </div>
+                                <span class="block text-xs font-bold text-stone-400 mb-2 w-full border-b border-stone-100 pb-2">상대 국가</span>
+                                <h3 class="font-bold text-xl text-stone-900 mb-4 break-keep">${p2.ko}</h3>
+                                <div id="stat-display-2" class="w-full mt-auto bg-stone-50 border border-stone-100 rounded-md py-3 px-2 flex items-center justify-center min-h-[4rem]">
+                                    <span class="text-2xl font-light text-stone-300">?</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 대결 스탯 버튼 그룹 -->
+                        <div id="stat-buttons-container" class="space-y-3">
+                            <button onclick="selectBattleStat('rawArea')" class="w-full py-4 border border-stone-300 bg-stone-50 hover:bg-stone-900 text-stone-700 hover:text-white font-bold text-sm transition-colors rounded-lg shadow-sm">
+                                영토 면적으로 대결하기
+                            </button>
+                            <button onclick="selectBattleStat('rawPop')" class="w-full py-4 border border-stone-300 bg-stone-50 hover:bg-stone-900 text-stone-700 hover:text-white font-bold text-sm transition-colors rounded-lg shadow-sm">
+                                인구수로 대결하기
+                            </button>
+                            <button onclick="selectBattleStat('rawGdp')" class="w-full py-4 border border-stone-300 bg-stone-50 hover:bg-stone-900 text-stone-700 hover:text-white font-bold text-sm transition-colors rounded-lg shadow-sm">
+                                GDP (경제 규모)로 대결하기
+                            </button>
+                        </div>
+
+                        <div id="battle-feedback" class="hidden"></div>
+                    </div>
+                `;
+
+            } else if (currentMode === 'quiz') {
+                const targetId = quizQuestions[currentQIndex];
+                const targetKo = countryInfo[targetId].ko;
+
+                panel.innerHTML = `
+                    <div class="p-8 h-full flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-end border-b border-stone-200 pb-4 mb-6">
+                                <div>
+                                    <span class="block text-xs font-bold tracking-widest text-stone-400 uppercase mb-1">GEOGRAPHY QUIZ</span>
+                                    <span class="text-sm text-stone-900 font-bold">문제 ${currentQIndex + 1} / ${quizQuestions.length}</span>
+                                </div>
+                                <div class="text-right">
+                                    <span class="block text-xs font-medium text-stone-400 uppercase tracking-widest mb-1">SCORE</span>
+                                    <span class="text-xl font-bold text-blue-600">${score}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="w-full bg-stone-200 rounded-full h-2 mb-2">
+                                <div id="quiz-time-bar" class="bg-blue-600 h-2 rounded-full transition-all duration-1000 ease-linear" style="width: 100%"></div>
+                            </div>
+                            <div class="text-right text-xs font-bold text-stone-500 mb-8">남은 시간: <span id="quiz-time-text" class="text-stone-900 text-base">10</span>초</div>
+                            
+                            <div class="text-center bg-stone-50 py-10 px-4 rounded-xl border border-stone-200">
+                                <span class="block text-sm font-bold text-stone-600 mb-4">👇 10초 안에 아래 국가를 클릭하세요!</span>
+                                <h2 class="text-5xl font-bold text-stone-900 tracking-tight">${targetKo}</h2>
+                            </div>
+                        </div>
+                        
+                        <div id="quiz-feedback" class="py-4 text-center opacity-0 transition-opacity duration-300"></div>
+                    </div>
+                `;
+            } else if (currentMode === 'result') {
+                panel.innerHTML = `
+                    <div class="p-8 flex flex-col h-full items-center justify-center text-center">
+                        <div class="w-16 h-16 bg-stone-100 rounded-full flex items-center justify-center mb-4">
+                            <i class="fas fa-check text-2xl text-stone-500"></i>
+                        </div>
+                        <span class="block text-xs font-bold tracking-widest text-stone-400 uppercase mb-2">ASSESSMENT COMPLETE</span>
+                        <h2 class="text-3xl font-light text-stone-900 mb-8">영토 퀴즈 완료</h2>
+                        
+                        <div class="mb-12 bg-stone-50 w-full py-8 rounded-xl border border-stone-200">
+                            <span class="block text-sm font-bold text-stone-500 mb-2">최종 점수</span>
+                            <div class="text-7xl font-bold text-blue-600">${score}</div>
+                        </div>
+
+                        <div class="w-full space-y-3 max-w-xs mx-auto">
+                            <button onclick="switchMode('study')" class="w-full py-3 border border-stone-300 text-stone-700 text-sm font-bold hover:bg-stone-100 transition-colors rounded-lg">
+                                탐색 모드로 돌아가기
+                            </button>
+                            <button onclick="switchMode('quiz')" class="w-full py-3 bg-stone-900 text-white text-sm font-bold hover:bg-stone-800 transition-colors rounded-lg shadow-md">
+                                다시 도전하기
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function showQuizFeedback(type, clickedCountryId = null) {
+            const feedbackEl = document.getElementById('quiz-feedback');
+            if(!feedbackEl) return;
+            
+            feedbackEl.style.opacity = '1';
+            
+            if(type === 'correct') {
+                feedbackEl.innerHTML = '<span class="text-green-700 font-bold tracking-wide bg-green-50 px-4 py-2 rounded-full border border-green-200"><i class="fas fa-check-circle"></i> 정답입니다!</span>';
+            } else if (type === 'timeout') {
+                feedbackEl.innerHTML = `
+                    <div class="mb-4 text-red-600 font-bold tracking-wide"><i class="fas fa-clock"></i> 시간 초과! 올바른 위치가 초록색으로 표시됩니다.</div>
+                    <button onclick="nextQuestion()" class="px-6 py-2 border border-stone-300 text-stone-700 font-bold text-sm hover:bg-stone-100 transition-colors rounded-md shadow-sm">다음 문제로 넘어가기</button>
+                `;
+            } else {
+                let clickedNameKo = "알 수 없는 지역";
+                if (clickedCountryId && countryInfo[clickedCountryId]) {
+                    clickedNameKo = countryInfo[clickedCountryId].ko;
+                }
+
+                feedbackEl.innerHTML = `
+                    <div class="mb-2 text-red-600 font-bold tracking-wide"><i class="fas fa-times-circle"></i> 오답입니다!</div>
+                    <div class="mb-4 text-sm text-stone-600 bg-stone-100 py-2 px-4 rounded-lg inline-block">
+                        방금 선택하신 곳은 <strong>[${clickedNameKo}]</strong>입니다.<br>올바른 위치가 초록색으로 표시됩니다.
+                    </div>
+                    <br>
+                    <button onclick="nextQuestion()" class="px-6 py-2 border border-stone-300 text-stone-700 font-bold text-sm hover:bg-stone-100 transition-colors rounded-md shadow-sm">다음 문제로 넘어가기</button>
+                `;
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>
