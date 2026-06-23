@@ -12,15 +12,24 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap');
         
         body {
             font-family: 'Noto Sans KR', sans-serif;
-            background-color: #ffffff;
-            color: #1c1917; 
+            background-color: #fdfbf7;
+            color: #3e2723;
+            overflow: hidden;
         }
 
+        /* 탐험 테마 제목용 폰트 */
+        .font-adventure {
+            font-family: 'Gowun Dodum', sans-serif;
+        }
+
+        /* 지도 영역: 가시성을 위해 점박이 배경을 완전히 제거하고 순백색 적용 */
         #map-container {
-            background-color: #f5f5f4; 
+            background-color: #ffffff; 
+            background-image: none !important;
         }
         
         .country {
@@ -33,12 +42,11 @@
         .country:hover {
             opacity: 0.8;
             stroke-width: 1.5px;
-            stroke: #a8a29e;
+            stroke: #94a3b8;
         }
         
-        /* 상태별 색상 강조 */
         .country.active {
-            fill: #292524 !important;
+            fill: #0f172a !important;
             stroke: #ffffff;
             stroke-width: 1px;
             z-index: 10;
@@ -46,46 +54,31 @@
         
         .country.correct { fill: #15803d !important; }
         .country.wrong { fill: #b91c1c !important; }
-
-        /* 월드컵 같은 조 국가 */
-        .country.wc-group-active { fill: #0f766e !important; }
-
-        /* 배틀 상대 국가 (각기 다른 색상) */
-        .country.battle-target-0 { fill: #b91c1c !important; } 
-        .country.battle-target-1 { fill: #1d4ed8 !important; } 
-        .country.battle-target-2 { fill: #b45309 !important; } 
-
-        .battle-winner {
-            transform: scale(1.05);
-            border: 2px solid #292524;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
-            transition: all 0.4s ease;
-            z-index: 10;
-        }
-        .battle-loser {
-            opacity: 0.3;
-            filter: grayscale(100%);
-            transform: scale(0.95);
-            transition: all 0.4s ease;
-        }
+        .country.wc-group-active { fill: #0d9488 !important; }
 
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #d6d3d1; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #a8a29e; }
+        ::-webkit-scrollbar-thumb { background: #d7ccc8; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a1887f; }
+
+        .custom-scrollbar::-webkit-scrollbar { width: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #d7ccc8; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #a1887f; }
 
         .nav-btn {
             position: relative;
-            color: #78716c;
+            color: #8d6e63;
             transition: color 0.2s;
             display: flex;
             align-items: center;
             gap: 6px;
-        }
-        .nav-btn:hover { color: #1c1917; }
-        .nav-btn.active {
-            color: #1c1917;
             font-weight: 700;
+        }
+        .nav-btn:hover { color: #3e2723; }
+        .nav-btn.active {
+            color: #2e7d32;
+            font-weight: 900;
         }
         .nav-btn.active::after {
             content: '';
@@ -93,8 +86,9 @@
             bottom: -4px;
             left: 0;
             width: 100%;
-            height: 2px;
-            background-color: #1c1917;
+            height: 3px;
+            background-color: #2e7d32;
+            border-radius: 2px;
         }
         @media (min-width: 1024px) {
             .nav-btn.active::after {
@@ -108,22 +102,22 @@
             cursor: pointer;
             transition: all 0.3s ease;
         }
-        .terrain-shape-mountain { stroke: #92400e; stroke-width: 16px; stroke-linecap: round; stroke-linejoin: round; fill: none; opacity: 0.4; vector-effect: non-scaling-stroke; }
-        .terrain-shape-river { stroke: #3b82f6; stroke-width: 3.5px; stroke-linecap: round; stroke-linejoin: round; fill: none; opacity: 0.9; vector-effect: non-scaling-stroke; }
-        .terrain-shape-river-tributary { stroke: #60a5fa; stroke-width: 1.5px; stroke-linecap: round; stroke-linejoin: round; fill: none; opacity: 0.7; vector-effect: non-scaling-stroke; }
-        .terrain-shape-plain { fill: #4ade80; opacity: 0.5; stroke: #166534; stroke-width: 1.5px; stroke-dasharray: 4,4; }
-        .terrain-shape-highland { fill: #f59e0b; opacity: 0.5; stroke: #92400e; stroke-width: 1.5px; stroke-dasharray: 4,4; }
-        .terrain-shape-desert { fill: #fde047; opacity: 0.7; stroke: #ca8a04; stroke-width: 1.5px; stroke-dasharray: 4,4; }
-        .terrain-shape-isthmus { fill: rgba(244, 63, 94, 0.1); opacity: 0.9; stroke: #e11d48; stroke-width: 2px; stroke-dasharray: 4,4; }
+        .terrain-shape-mountain { stroke: #5d4037; stroke-width: 16px; stroke-linecap: round; stroke-linejoin: round; fill: none; opacity: 0.5; vector-effect: non-scaling-stroke; }
+        .terrain-shape-river { stroke: #1976d2; stroke-width: 3.5px; stroke-linecap: round; stroke-linejoin: round; fill: none; opacity: 0.8; vector-effect: non-scaling-stroke; }
+        .terrain-shape-river-tributary { stroke: #42a5f5; stroke-width: 1.5px; stroke-linecap: round; stroke-linejoin: round; fill: none; opacity: 0.7; vector-effect: non-scaling-stroke; }
+        .terrain-shape-plain { fill: #81c784; opacity: 0.5; stroke: #388e3c; stroke-width: 1.5px; stroke-dasharray: 4,4; }
+        .terrain-shape-highland { fill: #ffb74d; opacity: 0.5; stroke: #f57c00; stroke-width: 1.5px; stroke-dasharray: 4,4; }
+        .terrain-shape-desert { fill: #fff59d; opacity: 0.7; stroke: #fbc02d; stroke-width: 1.5px; stroke-dasharray: 4,4; }
+        .terrain-shape-isthmus { fill: rgba(211, 47, 47, 0.15); opacity: 0.9; stroke: #c62828; stroke-width: 2px; stroke-dasharray: 4,4; }
 
         /* 활성화(클릭) 시 Shape 스타일 */
-        .terrain-active.terrain-shape-mountain { stroke: #78350f; opacity: 0.8; stroke-width: 20px; }
-        .terrain-active.terrain-shape-river { stroke: #1d4ed8; stroke-width: 5.5px; opacity: 1; }
-        .terrain-active.terrain-shape-river-tributary { stroke: #2563eb; stroke-width: 3px; opacity: 0.9; }
-        .terrain-active.terrain-shape-plain { fill: #22c55e; opacity: 0.8; }
-        .terrain-active.terrain-shape-highland { fill: #d97706; opacity: 0.8; }
-        .terrain-active.terrain-shape-desert { fill: #eab308; opacity: 0.9; }
-        .terrain-active.terrain-shape-isthmus { fill: rgba(225, 29, 72, 0.3); opacity: 1; stroke: #be123c; stroke-width: 3.5px; }
+        .terrain-active.terrain-shape-mountain { stroke: #3e2723; opacity: 0.8; stroke-width: 20px; }
+        .terrain-active.terrain-shape-river { stroke: #0d47a1; stroke-width: 5.5px; opacity: 1; }
+        .terrain-active.terrain-shape-river-tributary { stroke: #1565c0; stroke-width: 3px; opacity: 0.9; }
+        .terrain-active.terrain-shape-plain { fill: #4caf50; opacity: 0.8; }
+        .terrain-active.terrain-shape-highland { fill: #f57c00; opacity: 0.8; }
+        .terrain-active.terrain-shape-desert { fill: #fdd835; opacity: 0.9; }
+        .terrain-active.terrain-shape-isthmus { fill: rgba(198, 40, 40, 0.3); opacity: 1; stroke: #b71c1c; stroke-width: 3.5px; }
 
         /* 텍스트 라벨 스타일 */
         .terrain-text {
@@ -131,133 +125,240 @@
             font-weight: 700;
             font-size: 11px;
             font-style: italic;
-            text-shadow: 1px 1px 2px rgba(255,255,255,0.9), -1px -1px 2px rgba(255,255,255,0.9);
+            text-shadow: 1px 1px 2px rgba(253,251,247,0.9), -1px -1px 2px rgba(253,251,247,0.9);
             pointer-events: auto;
             cursor: pointer;
             transition: all 0.3s ease;
         }
-        .terrain-text-mountain { fill: #78350f; }
-        .terrain-text-river { fill: #1d4ed8; }
-        .terrain-text-plain { fill: #14532d; }
-        .terrain-text-highland { fill: #92400e; }
-        .terrain-text-desert { fill: #a16207; }
-        .terrain-text-isthmus { fill: #9f1239; }
+        .terrain-text-mountain { fill: #4e342e; }
+        .terrain-text-river { fill: #0d47a1; }
+        .terrain-text-plain { fill: #1b5e20; }
+        .terrain-text-highland { fill: #e65100; }
+        .terrain-text-desert { fill: #f57f17; }
+        .terrain-text-isthmus { fill: #b71c1c; }
 
         .terrain-active.terrain-text {
             font-weight: 900;
             font-size: 16px;
             text-shadow: 2px 2px 4px rgba(255,255,255,1), -2px -2px 4px rgba(255,255,255,1);
         }
+
+        /* 방탈출 오답 애니메이션 */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+        }
+        .shake-animation { animation: shake 0.4s ease-in-out; }
     </style>
 </head>
 <body class="h-screen flex flex-col overflow-hidden">
 
-    <!-- 첫 화면 (반응형: 스크롤 가능하도록 overflow-y-auto 적용) -->
-    <div id="home-screen" class="absolute inset-0 bg-stone-50 z-50 overflow-y-auto transition-opacity duration-700">
+    <!-- 신비의 문 애니메이션 오버레이 -->
+    <div id="door-overlay" class="fixed inset-0 z-[100] hidden bg-black flex items-center justify-center overflow-hidden">
+        <div id="door-left" class="absolute left-0 top-0 w-1/2 h-full bg-stone-800 border-r-8 border-stone-900 transition-transform duration-1000 ease-in-out flex items-center justify-end pr-4 lg:pr-10">
+             <div class="w-12 lg:w-20 h-40 lg:h-64 border-4 border-stone-900 rounded-sm opacity-50"></div>
+        </div>
+        <div id="door-right" class="absolute right-0 top-0 w-1/2 h-full bg-stone-800 border-l-8 border-stone-900 transition-transform duration-1000 ease-in-out flex items-center justify-start pl-4 lg:pl-10">
+             <div class="w-12 lg:w-20 h-40 lg:h-64 border-4 border-stone-900 rounded-sm opacity-50"></div>
+        </div>
+        <div id="door-text" class="absolute z-10 text-white text-2xl md:text-4xl font-black tracking-widest text-center drop-shadow-[0_5px_5px_rgba(0,0,0,1)] transition-opacity duration-300">
+            <i class="fas fa-unlock-alt mb-4 text-yellow-500 text-5xl block"></i>
+            굳게 닫힌 문이 열립니다...
+        </div>
+    </div>
+
+    <!-- 첫 화면 -->
+    <div id="home-screen" class="absolute inset-0 bg-[#fdfbf7] z-50 overflow-y-auto transition-opacity duration-700 bg-[url('https://www.transparenttextures.com/patterns/aged-paper.png')]">
         <div class="min-h-full w-full flex items-center justify-center p-6 py-12 lg:p-8">
             <div class="max-w-6xl w-full grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
                 <div class="space-y-4 lg:space-y-6 text-center lg:text-left">
-                    <p class="text-stone-500 tracking-widest text-sm font-bold">중학교 지리</p>
-                    <h1 class="text-4xl md:text-5xl lg:text-6xl font-light text-stone-900 tracking-tight leading-tight">
-                        아메리카 대륙 <br><span class="font-bold">탐구 프로젝트</span>
+                    <p class="text-[#8d6e63] tracking-widest text-sm font-bold uppercase"><i class="fas fa-compass mr-1"></i> 중학교 지리</p>
+                    <h1 class="text-4xl md:text-5xl lg:text-6xl font-adventure font-bold text-[#3e2723] tracking-tight leading-tight">
+                        아메리카 대륙 <br><span class="text-[#2e7d32]">탐구 프로젝트</span>
                     </h1>
-                    <div class="bg-white border border-stone-200 p-4 lg:p-5 rounded-lg shadow-sm text-left">
-                        <p class="text-sm text-stone-600 font-bold mb-2"><i class="fas fa-info-circle text-stone-400 mr-1"></i> 학습 안내</p>
-                        <p class="text-xs lg:text-sm text-stone-500 leading-relaxed">
-                            우측의 4가지 스테이지를 순서대로 클릭하여 학습을 진행하세요. 지도를 직접 탐색하며 아메리카 대륙의 지리, 문화, 통계를 전문적으로 분석할 수 있습니다.
+                    <div class="bg-white/80 backdrop-blur border-2 border-[#e6e2d8] p-4 lg:p-5 rounded-xl shadow-sm text-left">
+                        <p class="text-sm text-[#5d4037] font-bold mb-2"><i class="fas fa-map-marked-alt text-[#a1887f] mr-1"></i> 탐험 안내서</p>
+                        <p class="text-xs lg:text-sm text-[#6d4c41] leading-relaxed font-medium">
+                            우측의 스테이지를 순서대로 클릭하여 학습을 진행하세요. 지도를 직접 탐색하며 아메리카 대륙의 지리, 문화, 통계를 전문적으로 분석할 수 있습니다. 3단계 방탈출 미션에서는 배운 지식을 활용해 박진감 넘치는 탐험을 즐겨보세요!
                         </p>
                     </div>
                 </div>
                 
                 <div class="flex flex-col gap-3 lg:gap-4">
-                    <button onclick="startApp('study')" class="group text-left p-5 lg:p-6 bg-white border border-stone-200 hover:border-stone-900 transition-colors flex justify-between items-center rounded-lg shadow-sm hover:shadow-md">
+                    <button onclick="startApp('study')" class="group text-left p-5 lg:p-6 bg-[#6d4c41] border border-[#6d4c41] hover:bg-[#5d4037] transition-colors flex justify-between items-center rounded-xl shadow-md hover:shadow-lg transform hover:-translate-y-1">
                         <div>
-                            <span class="block text-[10px] lg:text-xs font-bold text-stone-400 tracking-wider mb-1">STAGE 1</span>
-                            <span class="block text-lg lg:text-xl font-medium text-stone-900">지리 데이터 탐색</span>
+                            <span class="block text-[10px] lg:text-xs font-bold text-[#d7ccc8] tracking-wider mb-1">STAGE 1</span>
+                            <span class="block text-lg lg:text-xl font-bold text-white"><i class="fas fa-search-location mr-2 text-[#d7ccc8]"></i>지리 데이터 탐색</span>
                         </div>
-                        <span class="text-stone-300 group-hover:text-stone-900 transition-colors text-xl lg:text-2xl">→</span>
+                        <span class="text-[#d7ccc8] group-hover:text-white transition-colors text-xl lg:text-2xl">→</span>
                     </button>
 
-                    <button onclick="startApp('quiz')" class="group text-left p-5 lg:p-6 bg-white border border-stone-200 hover:border-stone-900 transition-colors flex justify-between items-center rounded-lg shadow-sm hover:shadow-md">
+                    <button onclick="startApp('quiz')" class="group text-left p-5 lg:p-6 bg-[#6d4c41] border border-[#6d4c41] hover:bg-[#5d4037] transition-colors flex justify-between items-center rounded-xl shadow-md hover:shadow-lg transform hover:-translate-y-1">
                         <div>
-                            <span class="block text-[10px] lg:text-xs font-bold text-stone-400 tracking-wider mb-1">STAGE 2</span>
-                            <span class="block text-lg lg:text-xl font-medium text-stone-900">영토 퀴즈</span>
+                            <span class="block text-[10px] lg:text-xs font-bold text-[#d7ccc8] tracking-wider mb-1">STAGE 2</span>
+                            <span class="block text-lg lg:text-xl font-bold text-white"><i class="fas fa-flag mr-2 text-[#d7ccc8]"></i>영토 위치 퀴즈</span>
                         </div>
-                        <span class="text-stone-300 group-hover:text-stone-900 transition-colors text-xl lg:text-2xl">→</span>
+                        <span class="text-[#d7ccc8] group-hover:text-white transition-colors text-xl lg:text-2xl">→</span>
                     </button>
 
-                    <button onclick="startApp('worldcup')" class="group text-left p-5 lg:p-6 bg-white border border-stone-200 hover:border-stone-900 transition-colors flex justify-between items-center rounded-lg shadow-sm hover:shadow-md">
+                    <button onclick="startApp('escape')" class="group text-left p-5 lg:p-6 bg-[#6d4c41] border border-[#6d4c41] hover:bg-[#5d4037] transition-colors flex justify-between items-center rounded-xl shadow-md hover:shadow-lg transform hover:-translate-y-1">
                         <div>
-                            <span class="block text-[10px] lg:text-xs font-bold text-stone-400 tracking-wider mb-1">STAGE 3</span>
-                            <span class="block text-lg lg:text-xl font-medium text-stone-900">월드컵 조편성 분석</span>
+                            <span class="block text-[10px] lg:text-xs font-bold text-[#d7ccc8] tracking-wider mb-1">STAGE 3</span>
+                            <span class="block text-lg lg:text-xl font-bold text-white"><i class="fas fa-key mr-2 text-[#d7ccc8]"></i>방탈출</span>
                         </div>
-                        <span class="text-stone-300 group-hover:text-stone-900 transition-colors text-xl lg:text-2xl">→</span>
+                        <span class="text-[#d7ccc8] group-hover:text-white transition-colors text-xl lg:text-2xl">→</span>
                     </button>
 
-                    <button onclick="startApp('battle')" class="group text-left p-5 lg:p-6 bg-white border border-stone-200 hover:border-stone-900 transition-colors flex justify-between items-center rounded-lg shadow-sm hover:shadow-md">
+                    <button onclick="startApp('worldcup')" class="group text-left p-5 lg:p-6 bg-white border-2 border-[#e6e2d8] hover:border-[#5d4037] transition-colors flex justify-between items-center rounded-xl shadow-sm hover:shadow-md">
                         <div>
-                            <span class="block text-[10px] lg:text-xs font-bold text-stone-400 tracking-wider mb-1">STAGE 4</span>
-                            <span class="block text-lg lg:text-xl font-medium text-stone-900">국가 스탯 시뮬레이션</span>
+                            <span class="block text-[10px] lg:text-xs font-bold text-[#a1887f] tracking-wider mb-1">(참고)</span>
+                            <span class="block text-lg lg:text-xl font-bold text-[#3e2723]"><i class="fas fa-futbol mr-2 text-[#8d6e63]"></i>월드컵 조편성 분석</span>
                         </div>
-                        <span class="text-stone-300 group-hover:text-stone-900 transition-colors text-xl lg:text-2xl">→</span>
+                        <span class="text-[#d7ccc8] group-hover:text-[#5d4037] transition-colors text-xl lg:text-2xl">→</span>
                     </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- 헤더 (반응형: 모바일에서 위아래 정렬) -->
-    <header class="bg-white border-b border-stone-200 z-10 flex-shrink-0">
+    <!-- 헤더 -->
+    <header class="bg-[#fdfbf7] border-b border-[#e6e2d8] z-10 flex-shrink-0">
         <div class="max-w-screen-2xl mx-auto px-4 lg:px-6 py-3 lg:py-0 lg:h-16 flex flex-col lg:flex-row justify-between items-center gap-3 lg:gap-0">
-            <h1 class="text-base lg:text-lg font-bold text-stone-900 tracking-tight cursor-pointer flex items-center gap-2" onclick="goHome()">
-                <i class="fas fa-globe-americas text-stone-400"></i> 아메리카 대륙 탐험가
+            <h1 class="text-base lg:text-lg font-adventure font-bold text-[#3e2723] tracking-tight cursor-pointer flex items-center gap-2" onclick="goHome()">
+                <i class="fas fa-compass text-[#8d6e63]"></i> 아메리카 대륙 탐험가
             </h1>
             <nav class="flex flex-wrap justify-center gap-4 md:gap-6 lg:gap-8 text-xs lg:text-sm h-full items-center">
                 <button id="btn-home" class="nav-btn py-1 lg:py-0 h-full" onclick="goHome()">
                     <i class="fas fa-home"></i> 처음으로
                 </button>
-                <div class="w-px h-3 lg:h-4 bg-stone-300 hidden sm:block"></div>
+                <div class="w-px h-3 lg:h-4 bg-[#d7ccc8] hidden sm:block"></div>
                 <button id="btn-study" class="nav-btn py-1 lg:py-0 h-full" onclick="switchMode('study')">1. 탐색</button>
-                <button id="btn-quiz" class="nav-btn py-1 lg:py-0 h-full" onclick="switchMode('quiz')">2. 퀴즈</button>
-                <button id="btn-worldcup" class="nav-btn py-1 lg:py-0 h-full" onclick="switchMode('worldcup')">3. 월드컵</button>
-                <button id="btn-battle" class="nav-btn py-1 lg:py-0 h-full" onclick="switchMode('battle')">4. 배틀</button>
+                <button id="btn-quiz" class="nav-btn py-1 lg:py-0 h-full" onclick="switchMode('quiz')">2. 영토 위치 퀴즈</button>
+                <button id="btn-escape" class="nav-btn py-1 lg:py-0 h-full" onclick="switchMode('escape')">3. 방탈출</button>
+                <button id="btn-worldcup" class="nav-btn py-1 lg:py-0 h-full" onclick="switchMode('worldcup')">(참고) 월드컵</button>
             </nav>
         </div>
     </header>
 
-    <!-- 메인 컨텐츠 영역 (반응형: 모바일은 상하 분리, 데스크탑은 좌우 분리) -->
+    <!-- 메인 컨텐츠 영역 -->
     <main class="flex-1 flex flex-col lg:flex-row overflow-hidden w-full max-w-screen-2xl mx-auto relative">
-        <!-- 지도 (모바일: 상단 45%, 데스크탑: 좌측 60%) -->
-        <div id="map-container" class="w-full h-[45%] lg:w-3/5 lg:h-full relative border-b lg:border-b-0 lg:border-r border-stone-200 flex-shrink-0">
+        <!-- 지도 -->
+        <div id="map-container" class="w-full h-[45%] lg:w-3/5 lg:h-full relative border-b lg:border-b-0 lg:border-r border-[#e6e2d8] flex-shrink-0 transition-all duration-500">
             
             <!-- 지형 레이어 토글 버튼 -->
-            <button id="layer-toggle-btn" class="absolute top-3 lg:top-6 right-3 lg:right-6 bg-white/90 backdrop-blur-sm border border-stone-300 shadow-sm rounded-md px-3 lg:px-4 py-1.5 lg:py-2 text-[10px] lg:text-xs font-bold text-stone-700 hover:bg-stone-50 hover:text-stone-900 z-20 transition-colors hidden" onclick="toggleTerrain()">
-                <i id="layer-toggle-icon" class="fas fa-layer-group text-stone-500 mr-1"></i> <span id="layer-toggle-text">자연환경 보기</span>
+            <button id="layer-toggle-btn" class="absolute top-3 lg:top-6 right-3 lg:right-6 bg-white/90 backdrop-blur-sm border-2 border-[#e6e2d8] shadow-sm rounded-lg px-3 lg:px-4 py-2 text-[10px] lg:text-xs font-bold text-[#5d4037] hover:bg-[#fdfbf7] hover:text-[#3e2723] z-20 transition-all hidden" onclick="toggleTerrain()">
+                <i id="layer-toggle-icon" class="fas fa-layer-group text-[#8d6e63] mr-1"></i> <span id="layer-toggle-text">자연환경 보기</span>
             </button>
 
             <!-- 범례 -->
-            <div id="map-legend" class="absolute bottom-2 lg:bottom-6 left-2 lg:left-6 bg-white/90 backdrop-blur-sm px-3 py-2 lg:px-4 lg:py-3 border border-stone-200 text-[10px] lg:text-xs font-medium text-stone-600 z-10 pointer-events-none hidden rounded-md shadow-sm"></div>
+            <div id="map-legend" class="absolute bottom-2 lg:bottom-6 left-2 lg:left-6 bg-white/90 backdrop-blur-sm px-3 py-2 lg:px-4 lg:py-3 border-2 border-[#e6e2d8] text-[10px] lg:text-xs font-bold text-[#5d4037] z-10 pointer-events-none hidden rounded-lg shadow-sm"></div>
 
             <!-- 로딩 화면 -->
-            <div id="loading" class="absolute inset-0 flex flex-col items-center justify-center bg-stone-50 z-30">
-                <i class="fas fa-circle-notch fa-spin text-stone-400 text-3xl mb-3"></i>
-                <p class="text-sm font-medium text-stone-500 tracking-widest uppercase">지도를 불러오는 중입니다...</p>
+            <div id="loading" class="absolute inset-0 flex flex-col items-center justify-center bg-[#fdfbf7] z-30">
+                <i class="fas fa-compass fa-spin text-[#8d6e63] text-4xl mb-4"></i>
+                <p class="text-sm font-bold text-[#5d4037] tracking-widest uppercase">지도를 펼치는 중입니다...</p>
             </div>
 
             <svg id="map" class="w-full h-full"></svg>
         </div>
 
-        <!-- 오른쪽 정보 패널 (모바일: 하단 55% 스크롤, 데스크탑: 우측 40%) -->
-        <div id="panel-container" class="w-full h-[55%] lg:w-2/5 lg:h-full bg-white overflow-y-auto relative flex-shrink-0 lg:flex-shrink"></div>
+        <!-- 오른쪽 정보 패널 -->
+        <div id="panel-container" class="w-full h-[55%] lg:w-2/5 lg:h-full bg-[#fdfbf7] overflow-y-auto relative flex-shrink-0 lg:flex-shrink transition-all duration-500 bg-[url('https://www.transparenttextures.com/patterns/aged-paper.png')]"></div>
     </main>
 
     <!-- 카피라이트 푸터 -->
-    <footer class="bg-white border-t border-stone-200 z-[60] flex-shrink-0 relative w-full py-2 flex items-center justify-center">
-        <span class="text-[10px] lg:text-[11px] text-stone-500 font-bold tracking-widest">© Hyoeun. All rights reserved.</span>
+    <footer class="bg-[#fdfbf7] border-t border-[#e6e2d8] z-[60] flex-shrink-0 relative w-full py-2 flex items-center justify-center">
+        <span class="text-[10px] lg:text-[11px] text-[#a1887f] font-bold tracking-widest">© Hyoeun. All rights reserved.</span>
     </footer>
 
+    <!-- Firebase 실시간 클라우드 데이터베이스 연동 모듈 -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        window.globalEscapeRankings = [];
+        window.isFirebaseReady = false;
+
+let firebaseConfig;
+
+        if (typeof __firebase_config !== 'undefined') {
+            firebaseConfig = JSON.parse(__firebase_config);
+        } else {
+            firebaseConfig = {
+                apiKey: "AIzaSyCsbHOKgSlHDUZZAOG2vEgrjkeoykL_Cws",
+                authDomain: "america-explorer-b0ea0.firebaseapp.com",
+                databaseURL: "https://america-explorer-b0ea0-default-rtdb.firebaseio.com",
+                projectId: "america-explorer-b0ea0",
+                storageBucket: "america-explorer-b0ea0.firebasestorage.app",
+                messagingSenderId: "326224959501",
+                appId: "1:326224959501:web:ae7e0554bba4f433dd9d44",
+                measurementId: "G-YFEYP3J6BB"
+            };
+        }
+
+        try {
+            if (firebaseConfig && Object.keys(firebaseConfig).length > 0) {
+                const app = initializeApp(firebaseConfig);
+                const auth = getAuth(app);
+                const db = getDatabase(app); 
+                const appId = typeof __app_id !== 'undefined' ? __app_id : 'america-explorer-class';
+
+                const initAuth = async () => {
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                };
+                initAuth();
+
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        window.isFirebaseReady = true;
+                        const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'escape_rankings');
+
+                        onSnapshot(colRef, (snapshot) => {
+                            window.globalEscapeRankings = [];
+                            snapshot.forEach(documentSnapshot => {
+                                window.globalEscapeRankings.push(documentSnapshot.data());
+                            });
+                            if (typeof window.refreshLeaderboard === 'function') {
+                                window.refreshLeaderboard();
+                            }
+                        }, (error) => {
+                            console.error("서버 데이터 동기화 에러:", error);
+                        });
+
+                        window.saveRankingToCloud = async (rankingData) => {
+                            try {
+                                await addDoc(colRef, rankingData);
+                            } catch(e) {
+                                console.error("클라우드 서버 저장 실패:", e);
+                            }
+                        };
+
+                        window.clearCloudRankings = async () => {
+                            try {
+                                const snapshot = await getDocs(colRef);
+                                snapshot.forEach(async (documentSnapshot) => {
+                                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'escape_rankings', documentSnapshot.id));
+                                });
+                            } catch(e) {
+                                console.error("클라우드 서버 기록 삭제 실패:", e);
+                            }
+                        };
+                    }
+                });
+            }
+        } catch (e) {
+            console.error("클라우드 서버 초기화 실패:", e);
+        }
+    </script>
+
     <script>
-        // 전체 아메리카 대륙 국가 데이터
         const countryInfo = {
             "United States of America": { ko: "미국", capital: "워싱턴 D.C.", pop: "약 3억 3,900만 명", area: "약 983만 km²", lang: "영어", gdp: "세계 1위", desc: "앵글로아메리카의 대표 국가이자 세계 1위의 경제 대국입니다. 다양한 민족과 문화가 섞인 '인종의 용광로'이며, 북아메리카의 넓은 영토를 차지하고 있습니다.", img: "https://flagcdn.com/w320/us.png", coords: [-77.0369, 38.9072], fifa: "11위", wcGroup: "D조 (공동 개최국)", wcOpponents: "파라과이(남아메리카), 호주(오세아니아), 튀르키예(유럽)", rawPop: 33900, rawArea: 983, rawGdp: 1 },
             "Canada": { ko: "캐나다", capital: "오타와", pop: "약 3,800만 명", area: "약 998만 km²", lang: "영어, 프랑스어", gdp: "세계 10위", desc: "러시아에 이어 세계에서 두 번째로 영토가 넓습니다. 미국과 함께 앵글로아메리카에 속하며, 로키산맥과 나이아가라 폭포 등 웅장한 자연환경을 자랑합니다.", img: "https://flagcdn.com/w320/ca.png", coords: [-75.6972, 45.4215], fifa: "49위", wcGroup: "B조 (공동 개최국)", wcOpponents: "웨일스(유럽), 카타르(아시아), 스위스(유럽)", rawPop: 3800, rawArea: 998, rawGdp: 10 },
@@ -267,7 +368,7 @@
             "Chile": { ko: "칠레", capital: "산티아고", pop: "약 1,900만 명", area: "약 75만 km²", lang: "스페인어", gdp: "세계 44위", desc: "안데스 산맥과 태평양 사이에 남북으로 매우 길게 뻗은 독특한 영토를 가집니다. 북부의 건조한 아타카마 사막과 이스터 섬의 모아이 석상이 유명합니다.", img: "https://flagcdn.com/w320/cl.png", coords: [-70.6693, -33.4489], fifa: "42위", wcGroup: "본선 진출 실패", wcOpponents: "-", rawPop: 1900, rawArea: 75, rawGdp: 44 },
             "Colombia": { ko: "콜롬비아", capital: "보고타", pop: "약 5,200만 명", area: "약 114만 km²", lang: "스페인어", gdp: "세계 41위", desc: "남아메리카 북서부에 위치하여 태평양과 카리브해를 모두 접하고 있습니다. 세계적인 커피 생산국이며 적도가 지나갑니다.", img: "https://flagcdn.com/w320/co.png", coords: [-74.0721, 4.7110], fifa: "12위", wcGroup: "K조", wcOpponents: "포르투갈(유럽), 콩고민주공화국(아프리카), 우즈베키스탄(아시아)", rawPop: 5200, rawArea: 114, rawGdp: 41 },
             "Peru": { ko: "페루", capital: "리마", pop: "약 3,400만 명", area: "약 128만 km²", lang: "스페인어", gdp: "세계 50위", desc: "잉카 제국의 신비로운 공중 도시 마추픽추가 있는 국가입니다. 안데스 산맥의 웅장한 지형과 고원 지대의 독특한 원주민 문화를 엿볼 수 있습니다.", img: "https://flagcdn.com/w320/pe.png", coords: [-77.0282, -12.0464], fifa: "32위", wcGroup: "본선 진출 실패", wcOpponents: "-", rawPop: 3400, rawArea: 128, rawGdp: 50 },
-            "Venezuela": { ko: "베네수엘라", capital: "카라카스", pop: "약 2,800만 명", area: "약 91만 km²", lang: "스페인어", gdp: "통계 산정 어려움", desc: "세계 최대 수준의 석유 매장량을 자랑하며, 세계에서 가장 높은 폭포인 '앙헬 폭포(Angel Falls)'가 테이블 산인 테푸이에서 떨어집니다.", img: "https://flagcdn.com/w320/ve.png", coords: [-66.9036, 10.4806], fifa: "54위", wcGroup: "본선 진출 실패", wcOpponents: "-", rawPop: 2800, rawArea: 91, rawGdp: 999 },
+            "Venezuela": { ko: "베네수엘라", capital: "카라카스", pop: "약 2,800만 명", area: "약 91만 km²", lang: "스페인어", gdp: "통계 산정 어려움", desc: "세계 최대 수준의 석유 매장량을 자랑하며, 세계에서 가장 높은 폭포인 '앙헬 폭포(Angel Falls)'가 테이블 산인 테푸이에서 떨어집니다.", img: "https://flagcdn.com/w320/ve.png", coords: [-66.9036, 10.4806], fifa: "54위", wcGroup: "본선 진 진출 실패", wcOpponents: "-", rawPop: 2800, rawArea: 91, rawGdp: 999 },
             "Cuba": { ko: "쿠바", capital: "아바나", pop: "약 1,100만 명", area: "약 10만 km²", lang: "스페인어", gdp: "통계 산정 어려움", desc: "카리브해 최대의 섬나라로 아메리카 유일의 사회주의 국가입니다. 거리를 누비는 클래식 올드카, 시가, 그리고 열정적인 룸바 음악이 상징입니다.", img: "https://flagcdn.com/w320/cu.png", coords: [-82.3666, 23.1136], fifa: "169위", wcGroup: "본선 진출 실패", wcOpponents: "-", rawPop: 1100, rawArea: 10, rawGdp: 999 },
             "Ecuador": { ko: "에콰도르", capital: "키토", pop: "약 1,800만 명", area: "약 28만 km²", lang: "스페인어", gdp: "세계 64위", desc: "국명 자체가 에스파냐어로 '적도'를 의미합니다. 다윈의 진화론에 큰 영감을 준 희귀 동식물의 보고 '갈라파고스 제도'가 속해 있습니다.", img: "https://flagcdn.com/w320/ec.png", coords: [-78.5047, -0.2295], fifa: "31위", wcGroup: "E조", wcOpponents: "독일(유럽), 퀴라소(북아메리카), 코트디부아르(아프리카)", rawPop: 1800, rawArea: 28, rawGdp: 64 },
             "Bolivia": { ko: "볼리비아", capital: "수크레(행정수도 라파스)", pop: "약 1,200만 명", area: "약 109만 km²", lang: "스페인어 등", gdp: "세계 93위", desc: "남아메리카의 대표적인 내륙국입니다. 우기에 하늘을 거울처럼 비추어 '세상에서 가장 큰 거울'이라 불리는 우유니 소금 사막이 매우 유명합니다.", img: "https://flagcdn.com/w320/bo.png", coords: [-68.1193, -16.4897], fifa: "85위", wcGroup: "본선 진출 실패", wcOpponents: "-", rawPop: 1200, rawArea: 109, rawGdp: 93 },
@@ -275,29 +376,29 @@
             "Jamaica": { ko: "자메이카", capital: "킹스턴", pop: "약 280만 명", area: "약 1.1만 km²", lang: "영어", gdp: "세계 119위", desc: "지리적으로는 라틴아메리카(카리브해)에 위치하지만 영어를 사용해 문화적으론 앵글로아메리카에 속합니다. 레게 음악의 발상지입니다.", img: "https://flagcdn.com/w320/jm.png", coords: [-76.7920, 17.9716], fifa: "55위", wcGroup: "본선 진출 실패", wcOpponents: "-", rawPop: 280, rawArea: 1.1, rawGdp: 119 },
             "Guyana": { ko: "가이아나", capital: "조지타운", pop: "약 80만 명", area: "약 21만 km²", lang: "영어", gdp: "세계 103위", desc: "남아메리카 북부에 위치하지만, 영어를 공용어로 사용하는 앵글로아메리카 국가입니다.", img: "https://flagcdn.com/w320/gy.png", coords: [-58.1551, 6.8013], fifa: "154위", wcGroup: "본선 진출 실패", wcOpponents: "-", rawPop: 80, rawArea: 21, rawGdp: 103 },
             "Suriname": { ko: "수리남", capital: "파라마리보", pop: "약 60만 명", area: "약 16만 km²", lang: "네덜란드어", gdp: "세계 150위권 밖", desc: "남아메리카에서 가장 작은 독립국이며, 네덜란드의 지배를 받아 네덜란드어를 사용합니다.", img: "https://flagcdn.com/w320/sr.png", coords: [-55.2038, 5.8520], fifa: "144위", wcGroup: "본선 진출 실패", wcOpponents: "-", rawPop: 60, rawArea: 16, rawGdp: 150 },
-            "Paraguay": { ko: "파라과이", capital: "아순시온", pop: "약 680만 명", area: "약 40만 km²", lang: "스페인어, 과라니어", gdp: "세계 95위", desc: "남아메리카 중심부에 위치한 내륙국입니다. 바다와 접해있지 않지만, 강을 통해 대서양으로 나갈 수 있으며 수력 발전이 발달했습니다.", img: "https://flagcdn.com/w320/py.png", coords: [-57.6359, -25.3006], fifa: "56위", wcGroup: "D조", wcOpponents: "미국(북아메리카), 호주(오세아니아), 튀르키예(유럽)", rawPop: 680, rawArea: 40, rawGdp: 95 },
+            "Paraguay": { ko: "파라과이", capital: "아순시온", pop: "약 680만 명", area: "약 40만 km²", lang: "스페인어, 과라니어", gdp: "세계 95위", desc: "남아메리카 중심부에 위치한 내륙국입니다. 바다와 접해있지 않지만, 강을 통해 대서양으로 나갈 수 단 있으며 수력 발전이 발달했습니다.", img: "https://flagcdn.com/w320/py.png", coords: [-57.6359, -25.3006], fifa: "56위", wcGroup: "D조", wcOpponents: "미국(북아메리카), 호주(오세아니아), 튀르키예(유럽)", rawPop: 680, rawArea: 40, rawGdp: 95 },
             "Uruguay": { ko: "우루과이", capital: "몬테비데오", pop: "약 340만 명", area: "약 17만 km²", lang: "스페인어", gdp: "세계 70위", desc: "아르헨티나와 브라질 사이에 위치한 작고 평화로운 국가입니다. 복지 제도가 잘 갖춰져 있고 소고기 수출이 유명합니다.", img: "https://flagcdn.com/w320/uy.png", coords: [-56.1645, -34.9011], fifa: "15위", wcGroup: "H조", wcOpponents: "스페인(유럽), 카보베르데(아프리카), 사우디아라비아(아시아)", rawPop: 340, rawArea: 17, rawGdp: 70 },
             "Guatemala": { ko: "과테말라", capital: "과테말라시티", pop: "약 1,800만 명", area: "약 10만 km²", lang: "스페인어", gdp: "세계 68위", desc: "중앙아메리카 북서부에 위치하며 고대 마야 문명의 중심지였던 곳입니다. 화산이 많고 커피 수출로 유명합니다.", img: "https://flagcdn.com/w320/gt.png", coords: [-90.2299, 14.6349], fifa: "108위", wcGroup: "본선 진출 실패", wcOpponents: "-", rawPop: 1800, rawArea: 10.8, rawGdp: 68 },
             "Belize": { ko: "벨리즈", capital: "벨모판", pop: "약 40만 명", area: "약 2.2만 km²", lang: "영어", gdp: "세계 160위권 밖", desc: "중앙아메리카에서 유일하게 영어를 공용어로 사용하는 앵글로아메리카 국가입니다. 아름다운 카리브해 산호초로 유명합니다.", img: "https://flagcdn.com/w320/bz.png", coords: [-88.7593, 17.2510], fifa: "182위", wcGroup: "본선 진출 실패", wcOpponents: "-", rawPop: 40, rawArea: 2.2, rawGdp: 165 },
             "Honduras": { ko: "온두라스", capital: "테구시갈파", pop: "약 1,000만 명", area: "약 11만 km²", lang: "스페인어", gdp: "세계 100위권 밖", desc: "중앙아메리카 중심부에 위치하며 산악 지형이 대부분입니다. 바나나와 커피 등 농업이 발달해 있습니다.", img: "https://flagcdn.com/w320/hn.png", coords: [-87.2068, 14.0818], fifa: "82위", wcGroup: "본선 진출 실패", wcOpponents: "-", rawPop: 1000, rawArea: 11.2, rawGdp: 105 },
             "El Salvador": { ko: "엘살바도르", capital: "산살바도르", pop: "약 630만 명", area: "약 2.1만 km²", lang: "스페인어", gdp: "세계 100위권 밖", desc: "중앙아메리카에서 가장 면적이 작은 국가지만 인구 밀도가 높습니다. 화산이 매우 많은 지형적 특징을 가집니다.", img: "https://flagcdn.com/w320/sv.png", coords: [-89.2182, 13.6929], fifa: "81위", wcGroup: "본선 진출 실패", wcOpponents: "-", rawPop: 630, rawArea: 2.1, rawGdp: 102 },
             "Nicaragua": { ko: "니카라과", capital: "마나과", pop: "약 680만 명", area: "약 13만 km²", lang: "스페인어", gdp: "세계 130위권 밖", desc: "중앙아메리카에서 가장 넓은 면적을 가졌습니다. 화산 활동이 활발하며 거대한 니카라과 호수가 있습니다.", img: "https://flagcdn.com/w320/ni.png", coords: [-86.2362, 12.1150], fifa: "135위", wcGroup: "본선 진출 실패", wcOpponents: "-", rawPop: 680, rawArea: 13, rawGdp: 135 },
-            "Costa Rica": { ko: "코스타리카", capital: "산호세", pop: "약 510만 명", area: "약 5.1만 km²", lang: "스페인어", gdp: "세계 80위권", desc: "군대를 폐지하고 영세 중립을 선언한 평화의 나라입니다. 생물 다양성이 뛰어나 생태 관광의 천국으로 불립니다.", img: "https://flagcdn.com/w320/cr.png", coords: [-84.0907, 9.9281], fifa: "52위", wcGroup: "본선 진출 실패", wcOpponents: "-", rawPop: 510, rawArea: 5.1, rawGdp: 85 },
+            "Costa Rica": { ko: "코스타리카", capital: "산호세", pop: "약 510만 명", area: "약 5.1만 km²", lang: "스페인어", gdp: "세계 80위권", desc: "군대를 폐지하고 영세 중립을 선언한 평화의 나라입니다. 생물 다양성이 뛰어나 생태 관광의 천국으로 불립니다.", img: "https://flagcdn.com/w320/cr.png", coords: [-84.0907, 9.9281], fifa: "52위", wcGroup: "본선 진 진출 실패", wcOpponents: "-", rawPop: 510, rawArea: 5.1, rawGdp: 85 },
             "Dominican Republic": { ko: "도미니카 공화국", capital: "산토도밍고", pop: "약 1,100만 명", area: "약 4.8만 km²", lang: "스페인어", gdp: "세계 60위권", desc: "카리브해 이스파니올라섬 동쪽에 위치한 나라입니다. 아름다운 해변 관광지로 전 세계적인 사랑을 받습니다.", img: "https://flagcdn.com/w320/do.png", coords: [-69.9312, 18.4861], fifa: "60위", wcGroup: "본선 진출 실패", wcOpponents: "-", rawPop: 1100, rawArea: 4.8, rawGdp: 65 },
             "Haiti": { ko: "아이티", capital: "포르토프랭스", pop: "약 1,100만 명", area: "약 2.7만 km²", lang: "프랑스어, 아이티 크레올어", gdp: "세계 140위권", desc: "아메리카 대륙 최초로 흑인 노예들이 주도하여 독립을 이뤄낸 역사적인 국가입니다. 이스파니올라섬 서쪽에 있습니다.", img: "https://flagcdn.com/w320/ht.png", coords: [-72.2852, 18.5392], fifa: "89위", wcGroup: "C조", wcOpponents: "브라질(남아메리카), 모로코(아프리카), 스코틀랜드(유럽)", rawPop: 1100, rawArea: 2.7, rawGdp: 140 },
             "The Bahamas": { ko: "바하마", capital: "나소", pop: "약 40만 명", area: "약 1.3만 km²", lang: "영어", gdp: "세계 130위권", desc: "미국 플로리다 반도 앞바다에 수백 개의 산호초 섬으로 이루어진 카리브해의 앵글로아메리카 섬나라입니다.", img: "https://flagcdn.com/w320/bs.png", coords: [-77.3963, 25.0343], fifa: "200위권 밖", wcGroup: "본선 진출 실패", wcOpponents: "-", rawPop: 40, rawArea: 1.3, rawGdp: 132 },
             "Puerto Rico": { ko: "푸에르토리코", capital: "산후안", pop: "약 320만 명", area: "약 0.9만 km²", lang: "스페인어, 영어", gdp: "통계 별도 산정", desc: "독립국이 아닌 미국의 자치령으로, 카리브해에 위치하며 라틴 아메리카와 미국 문화가 독특하게 혼합되어 있습니다.", img: "https://flagcdn.com/w320/pr.png", coords: [-66.1057, 18.4655], fifa: "160위", wcGroup: "본선 진출 실패", wcOpponents: "-", rawPop: 320, rawArea: 0.9, rawGdp: 999 }
         };
 
-        // 지형지물 데이터
         const terrainFeatures = [
             { id: "t-rocky", groupId: "g-rocky", name: "로키산맥", type: "mountain", geometry: { type: "LineString", coordinates: [[-125, 55], [-121, 51], [-116, 47], [-111, 43], [-109, 39], [-106, 35], [-105, 32]] }, labelCoords: [-112, 45], labelRotate: 55, desc: "북아메리카 대륙의 서부를 길게 종단하는 거대한 산맥입니다. 비교적 최근에 땅이 솟아올라 만들어졌기 때문에 지형이 매우 높고 뾰족하며 험준한 것이 특징입니다." },
             { id: "t-appalachian", groupId: "g-appalachian", name: "애팔래치아 산맥", type: "mountain", geometry: { type: "LineString", coordinates: [[-68, 47], [-71, 44], [-75, 41], [-79, 38], [-83, 35], [-86.5, 33]] }, labelCoords: [-78, 38], labelRotate: -45, desc: "북아메리카 동부에 위치한 오래된 산맥입니다. 수억 년 동안 비바람에 깎이고 침식되어 산세가 완만하며, 석탄 등 지하자원이 풍부합니다." },
-            { id: "t-andes", groupId: "g-andes", name: "안데스산맥", type: "mountain", geometry: { type: "LineString", coordinates: [[-74, 8], [-76, 4], [-78.5, 0], [-79.5, -6], [-77, -12], [-74, -16], [-69, -22], [-69, -28], [-70.5, -35], [-72, -45], [-73, -52]] }, labelCoords: [-74, -20], labelRotate: 80, desc: "남아메리카 서해안을 따라 뻗어 있는 세계에서 가장 긴 산맥으로 험준한 지형을 이룹니다." },
+            { id: "t-andes", groupId: "g-andes", name: "안데스산맥", type: "mountain", geometry: { type: "LineString", coordinates: [[-74, 8], [-76, 4], [-78.5, 0], [-79.5, -6], [-77, -12], [-74, -16], [-69, -22], [-69, -28], [-70.5, -35], [-72, -45], [-73, -52]] }, labelCoords: [-80.5, -10.0], labelRotate: 70, desc: "남아메리카 서해안을 따라 뻗어 있는 세계에서 가장 긴 산맥으로 험준한 지형을 이룹니다." },
             { id: "t-greatplains", groupId: "g-greatplains", name: "대평원", type: "plain", geometry: { type: "Polygon", coordinates: [[[-114, 53], [-105, 54], [-98, 50], [-96, 42], [-97, 34], [-100, 29], [-104, 32], [-105, 40], [-109, 46]]] }, labelCoords: [-100, 40], labelRotate: 0, desc: "로키산맥 동쪽에 넓게 펼쳐진 대초원 지대로, 밀 재배와 소 방목 등 대규모 농업 및 목축업이 이루어집니다." },
-            { id: "t-amazonbasin", groupId: "g-amazonbasin", name: "아마존분지", type: "plain", geometry: { type: "Polygon", coordinates: [[[-76, 2], [-70, 4], [-62, 3], [-54, 1], [-50, -2], [-52, -8], [-58, -13], [-66, -14], [-74, -10], [-77, -4]]] }, labelCoords: [-61, -9], labelRotate: 0, desc: "아마존강 유역에 넓게 퍼져 있는 지구 최대의 열대 우림 지대입니다.<br><br><div class='bg-blue-50 border border-blue-100 p-3 rounded-md mt-2'><span class='text-blue-700 font-bold text-[10px] lg:text-xs'>💡 분지란?</span><br><span class='text-xs lg:text-sm text-stone-800 font-medium'>주변이 산이나 산지로 둘러싸여 있는 낮고 평평한 땅을 말합니다.</span></div>" },
+            { id: "t-amazonbasin", groupId: "g-amazonbasin", name: "아마존분지", type: "plain", geometry: { type: "Polygon", coordinates: [[[-76, 2], [-70, 4], [-62, 3], [-54, 1], [-50, -2], [-52, -8], [-58, -13], [-66, -14], [-74, -10], [-77, -4]]] }, labelCoords: [-61, -9], labelRotate: 0, desc: "아마존강 유역에 넓게 퍼져 있는 지구 최대의 열대 우림 지대입니다.<br><br><div class='bg-[#e6e2d8] border border-[#d7ccc8] p-3 rounded-md mt-2'><span class='text-[#3e2723] font-bold text-[10px] lg:text-xs'>💡 분지란?</span><br><span class='text-xs lg:text-sm text-[#5d4037] font-medium'>주변이 산이나 산지로 둘러싸여 있는 낮고 평평한 땅을 말합니다.</span></div>" },
             { id: "t-brazilhighland", groupId: "g-brazilhighland", name: "브라질고원", type: "highland", geometry: { type: "Polygon", coordinates: [[[-48, -4], [-40, -5], [-36, -8], [-40, -18], [-46, -25], [-52, -28], [-54, -22], [-51, -15], [-48, -4]]] }, labelCoords: [-46, -15], labelRotate: 0, desc: "브라질 면적의 절반 이상을 차지하는 거대한 고원 지대로, 철광석이 풍부하며 커피 재배가 활발합니다." },
-            { id: "t-uyuni", groupId: "g-uyuni", name: "우유니 사막", type: "desert", geometry: { type: "Polygon", coordinates: [[[-69.0, -19.0], [-66.5, -18.5], [-65.0, -19.5], [-65.0, -21.5], [-66.5, -22.0], [-69.0, -21.5]]] }, labelCoords: [-67.0, -20.2], labelRotate: 0, desc: "볼리비아 고산지대에 위치한 세계 최대의 소금 사막입니다. 우기에는 얕은 물이 고여 거대한 거울처럼 변합니다." },
+            { id: "t-uyuni", groupId: "g-uyuni", name: "우유니 사막", type: "desert", geometry: { type: "Polygon", coordinates: [[[-69.0, -19.0], [-66.5, -18.5], [-65.0, -19.5], [-65.0, -21.5], [-66.5, -22.0], [-69.0, -21.5]]] }, labelCoords: [-64.0, -23.0], labelRotate: 0, desc: "볼리비아 고산지대에 위치한 세계 최대의 소금 사막입니다. 우기에는 얕은 물이 고여 거대한 거울처럼 변합니다." },
+            { id: "t-atacama", groupId: "g-atacama", name: "아타카마 사막", type: "desert", geometry: { type: "Polygon", coordinates: [[[-70.5, -19.0], [-69.5, -22.0], [-70.0, -26.0], [-70.8, -29.0], [-71.5, -26.0], [-71.0, -22.0], [-70.5, -19.0]]] }, labelCoords: [-73.5, -24.0], labelRotate: -75, desc: "칠레 북부에 위치한 세계에서 가장 건조한 사막 중 하나입니다. 안데스 산맥과 태평양 사이에 길게 뻗어 있으며, 강수량이 거의 없어 화성 탐사선의 테스트 장소로도 쓰일 정도입니다." },
             
             // 핵심 경계선
             { id: "t-riogrande", groupId: "g-riogrande", name: "리오그란데강", type: "river", geometry: { type: "LineString", coordinates: [[-106.5, 31.5], [-104.5, 29.5], [-102.5, 29.8], [-101.0, 29.8], [-99.5, 27.5], [-97.5, 26.0]] }, labelCoords: [-100, 26.5], labelRotate: -25, desc: "미국과 멕시코의 국경을 흐르는 강입니다. 영어를 주로 사용하는 북쪽의 <b>'앵글로아메리카'</b>와, 에스파냐어/포르투갈어를 주로 사용하는 남쪽의 <b>'라틴아메리카'</b>를 구분하는 매우 중요한 <b>문화적 경계선</b>입니다." },
@@ -319,43 +420,56 @@
             { id: "t-amazon-trib6", groupId: "g-amazon", name: "", type: "river-tributary", geometry: { type: "LineString", coordinates: [[-70.0, -9.5], [-68.0, -6.5], [-66.0, -3.4], [-64.5, -3.1]] }, desc: "" }
         ];
 
+        const escapeContent = [
+            { type: 'story', title: '📜 미지의 대륙 탐험을 시작하며', text: '아메리카 대륙 어딘가에 잠들어 있는 전설의 황금 도시.<br><br>그곳에 도달하기 위해서는 12개의 굳게 닫힌 신비의 문을 열어야 한다.<br>여러분의 지리적 지식과 기억력을 무기 삼아 모든 관문을 통과하고<br>최고의 탐험가가 되어라!', btn: '탐험 시작' },
+            { type: 'quiz', qType: 'objective', q: '<span class="text-[#1565c0] block mb-2 font-bold">[자연환경 - 객관식]</span> 미국과 멕시코의 국경을 흐르는 강입니다.<br><br>영어를 주로 사용하는 북쪽의 \'앵글로아메리카\'와<br>에스파냐어/포르투갈어를 주로 사용하는 남쪽의 \'라틴아메리카\'를<br>구분하는 매우 중요한 문화적 경계선이 됩니다.<br><br>이 강의 이름은 다음 중 무엇인가요?', opts: ['미시시피강', '아마존강', '리오그란데강', '오하이오강'], ansIdx: 3 },
+            { type: 'quiz', qType: 'map_click', q: '<span class="text-[#1565c0] block mb-2 font-bold">[국가 위치]</span> 남아메리카에서 가장 큰 나라이자 유일하게 포르투갈어를 사용하는 국가의 위치를 지도에서 클릭하시오.', ansTarget: 'Brazil' },
+            { type: 'quiz', qType: 'subjective', q: '<span class="text-[#1565c0] block mb-2 font-bold">[자연환경]</span> 북아메리카와 남아메리카를 연결하는<br>자연적(위치적) 경계선 역할을 하는 좁은 땅입니다.<br><br>태평양과 대서양을 가장 빠르게 잇는 운하가 위치한<br>이곳은 <b>\'OOO 지협\'</b>입니다.<br><br>OOO에 들어갈 말은 무엇일까요?', ans: ['파나마'] },
+            { type: 'quiz', qType: 'map_click', q: '<span class="text-[#1565c0] block mb-2 font-bold">[국가 위치]</span> 국명 자체가 에스파냐어로 \'적도\'를 의미하는 나라로, 희귀 동식물의 보고인 \'갈라파고스 제도\'가 속해 있는 국가의 위치를 지도에서 클릭하시오.', ansTarget: 'Ecuador' },
+            { type: 'quiz', qType: 'subjective', q: '<span class="text-[#1565c0] block mb-2 font-bold">[국가]</span> 안데스 산맥과 태평양 사이에 남북으로<br>매우 길게 뻗은 독특한 영토를 가집니다.<br><br>북부의 건조한 아타카마 사막과<br>이스터 섬의 모아이 석상이 유명한 이 국가는 어디인가요?', ans: ['칠레'] },
+            { type: 'quiz', qType: 'subjective', q: '<span class="text-[#1565c0] block mb-2 font-bold">[문화 구분]</span> 미국과 캐나다는 아메리카를 문화로 구분하였을 때 OOO아메리카에 속합니다.<br><br>OOO에 들어갈 말은 무엇일까요?', ans: ['앵글로'] },
+            { type: 'quiz', qType: 'subjective', q: '<span class="text-[#1565c0] block mb-2 font-bold">[자연환경]</span> 볼리비아에 위치하며, 우기에 하늘을 거울처럼 비추어<br>\'세상에서 가장 큰 거울\'이라 불리는 이곳은<br><b>\'OOO 소금 사막\'</b>입니다.<br><br>빈칸에 들어갈 말은 무엇일까요?', ans: ['우유니', '우유니소금사막', '우유니 소금 사막'] },
+            { type: 'quiz', qType: 'map_click', q: '<span class="text-[#1565c0] block mb-2 font-bold">[국가 위치]</span> 잉카 제국의 신비로운 공중 도시 마추픽추가 있는 국가입니다.<br><br>안데스 산맥의 웅장한 지형과 고원 지대의 독특한 원주민 문화를 엿볼 수 있는<br>이 국가의 위치를 지도에서 클릭하시오.', ansTarget: 'Peru' },
+            { type: 'quiz', qType: 'subjective', q: '<span class="text-[#1565c0] block mb-2 font-bold">[자연환경]</span> 세계에서 유량이 가장 많은 하천으로,<br>주변의 넓은 열대 우림 지대는 \'지구의 허파\'라고 불립니다.<br><br>이 하천의 이름은 무엇일까요?', ans: ['아마존강', '아마존 강', '아마존'] },
+            { type: 'quiz', qType: 'subjective', q: '<span class="text-[#1565c0] block mb-2 font-bold">[국가]</span> 남아메리카 북서부에 위치하여 태평양과 카리브해를 모두 접하고 있습니다.<br><br>세계적인 커피 생산국이며 적도가 지나가는<br>이 나라는 어디인가요?', ans: ['콜롬비아'] },
+            { type: 'quiz', qType: 'subjective', q: '<span class="text-[#1565c0] block mb-2 font-bold">[국가]</span> 지리적으로는 라틴아메리카(카리브해)에 위치하지만<br>영어를 사용해 문화적으론 앵글로아메리카에 속합니다.<br><br>레게 음악의 발상지인 이 나라는 어디일까요?', ans: ['자메이카'] },
+            { type: 'quiz', qType: 'subjective', q: '<span class="text-[#1565c0] block mb-2 font-bold">[자연환경]</span> 북아메리카 대륙의 서부를 길게 종단하는 거대한 산맥입니다.<br><br>비교적 최근에 땅이 솟아올라 만들어졌기 때문에<br>지형이 매우 높고 뾰족하며 험준한 것이 특징인<br>이 산맥의 이름은 무엇인가요?', ans: ['로키산맥', '로키 산맥', '로키'] },
+            { type: 'result' }
+        ];
+
         let currentMode = 'home';
         let selectedCountryId = null;
         let selectedTerrain = null; 
         let mapFeatures = [];
-        let d3Map, pathGenerator, projection;
+        let d3Map, pathGenerator, projection, zoom;
         
         let quizQuestions = [];
         let currentQIndex = 0;
         let score = 0;
         let isAnimating = false;
-
-        let battleOpponents = [];
-        let currentOpponentId = null;
-        let battleScore = 0;
-        let battleState = 'select_stat';
-        let pendingStatKey = null;
-
         let quizTimerInterval = null;
         let quizTimeRemaining = 10;
-        
         let showTerrain = false; 
+
+        let escapeState = 'login'; 
+        let escapeClass = '';
+        let escapeName = '';
+        let escapeStartTime = null;
+        let escapeTimerInterval = null;
+        let escapeTimeElapsed = 0;
+        let escapeStoryStep = 0;
 
         function getCountryColor(d) {
             const info = countryInfo[d.properties.name];
-            let baseColor = '#e7e5e4'; // stone-200
+            let baseColor = '#e2e8f0'; // 기본 육지 색상
 
             if (currentMode === 'worldcup') {
                 if (!info || info.wcGroup.includes('실패') || info.wcGroup.includes('불가')) return baseColor;
-                return '#93c5fd'; 
-            } else if (currentMode === 'battle' || currentMode === 'battle_arena') {
-                if (!info) return baseColor;
-                if (selectedCountryId) return baseColor; 
-                return '#d6d3d1'; 
-            } else if (currentMode === 'quiz' || currentMode === 'result') {
+                return '#38bdf8'; 
+            } else if (currentMode === 'quiz' || currentMode === 'result' || currentMode === 'escape') {
                 return baseColor; 
             }
-            return info ? '#d6d3d1' : baseColor;
+            return info ? '#cbd5e1' : baseColor;
         }
 
         async function init() {
@@ -405,12 +519,11 @@
 
             const g = svg.append('g');
 
-            const zoom = d3.zoom()
+            zoom = d3.zoom()
                 .scaleExtent([0.8, 8])
                 .on('zoom', (event) => { g.attr('transform', event.transform); });
             svg.call(zoom);
 
-            // 모바일 화면에서는 지도를 살짝 더 크게(0.7) 설정하여 잘 보이도록 조정
             const isMobile = window.innerWidth < 1024;
             const scaleFactor = isMobile ? 0.7 : 0.45;
             const mapCenter = isMobile ? [-85, 10] : [-80, 5]; 
@@ -432,7 +545,6 @@
                 .attr('fill', d => getCountryColor(d))
                 .on('click', (event, d) => handleCountryClick(event, d));
 
-            // 수도 표시
             const starData = mapFeatures.filter(d => countryInfo[d.properties.name]);
             g.selectAll('circle.capital-dot')
                 .data(starData)
@@ -448,7 +560,7 @@
                     if (area <= 50) return 1.2;
                     return 2;
                 })
-                .style('fill', '#1c1917')
+                .style('fill', '#0f172a')
                 .style('stroke', '#ffffff')
                 .style('stroke-width', d => {
                     const area = countryInfo[d.properties.name].rawArea;
@@ -456,26 +568,25 @@
                 })
                 .style('pointer-events', 'none');
                 
-            // 대양 이름
-            const oceanStyle = { "fill": "#a8a29e", "font-size": "24px", "font-weight": "700", "letter-spacing": "8px", "opacity": "0.4", "pointer-events": "none", "text-anchor": "middle" };
+            const oceanStyle = { "fill": "#8d6e63", "opacity": "0.3", "pointer-events": "none", "text-anchor": "middle" };
             
             g.append("text").attr("x", projection([-105, 0])[0]).attr("y", projection([-105, 0])[1]).text("태평양")
-             .style("fill", oceanStyle.fill).style("font-size", oceanStyle["font-size"]).style("letter-spacing", oceanStyle["letter-spacing"]).style("opacity", oceanStyle.opacity).attr("text-anchor", oceanStyle["text-anchor"]).style("pointer-events", "none");
+             .style("fill", oceanStyle.fill).style("font-size", "16px").style("font-weight", "900").style("letter-spacing", "6px").style("opacity", oceanStyle.opacity).attr("text-anchor", oceanStyle["text-anchor"]).style("pointer-events", "none");
 
             g.append("text").attr("x", projection([-40, 15])[0]).attr("y", projection([-40, 15])[1]).text("대서양")
-             .style("fill", oceanStyle.fill).style("font-size", oceanStyle["font-size"]).style("letter-spacing", oceanStyle["letter-spacing"]).style("opacity", oceanStyle.opacity).attr("text-anchor", oceanStyle["text-anchor"]).style("pointer-events", "none");
+             .style("fill", oceanStyle.fill).style("font-size", "16px").style("font-weight", "900").style("letter-spacing", "6px").style("opacity", oceanStyle.opacity).attr("text-anchor", oceanStyle["text-anchor"]).style("pointer-events", "none");
 
-            g.append("text").attr("x", projection([-89, 23])[0]).attr("y", projection([-89, 23])[1]).text("멕시코만")
-             .style("fill", oceanStyle.fill).style("font-size", "12px").style("font-weight", "700").style("letter-spacing", "3px").style("opacity", oceanStyle.opacity).attr("text-anchor", "middle").style("pointer-events", "none");
+            g.append("text").attr("x", projection([-90, 24])[0]).attr("y", projection([-90, 24])[1]).text("멕시코만")
+             .style("fill", oceanStyle.fill).style("font-size", "10px").style("font-weight", "900").style("letter-spacing", "2px").style("opacity", oceanStyle.opacity).attr("text-anchor", "middle").style("pointer-events", "none");
 
-            g.append("text").attr("x", projection([-75, 14.5])[0]).attr("y", projection([-75, 14.5])[1]).text("카리브해")
-             .style("fill", oceanStyle.fill).style("font-size", "12px").style("font-weight", "500").style("letter-spacing", "4px").style("opacity", oceanStyle.opacity).attr("text-anchor", "middle").style("pointer-events", "none");
+            g.append("text").attr("x", projection([-76, 14])[0]).attr("y", projection([-76, 14])[1]).text("카리브해")
+             .style("fill", oceanStyle.fill).style("font-size", "10px").style("font-weight", "700").style("letter-spacing", "2px").style("opacity", oceanStyle.opacity).attr("text-anchor", "middle").style("pointer-events", "none");
 
             // 적도 (실선)
             g.append("path")
              .datum({type: "LineString", coordinates: [[-140, 0], [-30, 0]]})
              .attr("d", pathGenerator)
-             .attr("stroke", "#dc2626")
+             .attr("stroke", "#c62828")
              .attr("stroke-width", 1.5)
              .attr("fill", "none")
              .style("opacity", 0.6)
@@ -485,7 +596,7 @@
              .attr("x", projection([-140, 0])[0] - 8)
              .attr("y", projection([-140, 0])[1])
              .text("적도 (0°)")
-             .style("fill", "#dc2626")
+             .style("fill", "#c62828")
              .style("font-size", "11px")
              .style("font-weight", "700")
              .style("letter-spacing", "1px")
@@ -499,7 +610,7 @@
              .datum({type: "LineString", coordinates: [[-140, 23.5], [-30, 23.5]]})
              .attr("class", "tropic-element")
              .attr("d", pathGenerator)
-             .attr("stroke", "#dc2626")
+             .attr("stroke", "#c62828")
              .attr("stroke-width", 1)
              .attr("stroke-dasharray", "4,4")
              .attr("fill", "none")
@@ -512,7 +623,7 @@
              .attr("x", projection([-140, 23.5])[0] - 8)
              .attr("y", projection([-140, 23.5])[1])
              .text("북회귀선 (23.5°N)")
-             .style("fill", "#dc2626")
+             .style("fill", "#c62828")
              .style("font-size", "11px")
              .style("font-weight", "700")
              .style("letter-spacing", "1px")
@@ -527,7 +638,7 @@
              .datum({type: "LineString", coordinates: [[-140, -23.5], [-30, -23.5]]})
              .attr("class", "tropic-element")
              .attr("d", pathGenerator)
-             .attr("stroke", "#dc2626")
+             .attr("stroke", "#c62828")
              .attr("stroke-width", 1)
              .attr("stroke-dasharray", "4,4")
              .attr("fill", "none")
@@ -540,7 +651,7 @@
              .attr("x", projection([-140, -23.5])[0] - 8)
              .attr("y", projection([-140, -23.5])[1])
              .text("남회귀선 (23.5°S)")
-             .style("fill", "#dc2626")
+             .style("fill", "#c62828")
              .style("font-size", "11px")
              .style("font-weight", "700")
              .style("letter-spacing", "1px")
@@ -581,13 +692,23 @@
         
         function handleTerrainClick(event, d) {
             event.stopPropagation(); 
+            const targetGroupId = d.groupId || d.id;
+            
+            // 이미 선택된 지형인지 확인 (토글 해제를 위함)
+            const isAlreadySelected = selectedTerrain && (selectedTerrain.groupId === targetGroupId || selectedTerrain.id === targetGroupId);
+
             d3.selectAll('.terrain-active').classed('terrain-active', false);
             d3.selectAll('.country').classed('active', false); 
             selectedCountryId = null; 
             
-            const targetGroupId = d.groupId || d.id;
-            d3.selectAll(`.group-${targetGroupId}`).classed('terrain-active', true);
-            selectedTerrain = terrainFeatures.find(f => (f.id === targetGroupId || f.groupId === targetGroupId) && f.name !== "");
+            if (isAlreadySelected) {
+                // 이미 선택된 것을 다시 클릭했으므로 선택 해제 상태로 둠
+                selectedTerrain = null;
+            } else {
+                // 새로운 지형 선택
+                d3.selectAll(`.group-${targetGroupId}`).classed('terrain-active', true);
+                selectedTerrain = terrainFeatures.find(f => (f.id === targetGroupId || f.groupId === targetGroupId) && f.name !== "");
+            }
             
             if(currentMode === 'study') renderPanel();
         }
@@ -600,10 +721,10 @@
             
             if(showTerrain) {
                 btnSpan.innerText = '자연환경 끄기';
-                btnIcon.className = 'fas fa-eye-slash text-blue-500 mr-1';
+                btnIcon.className = 'fas fa-eye-slash text-[#1565c0] mr-1';
             } else {
                 btnSpan.innerText = '자연환경 보기';
-                btnIcon.className = 'fas fa-layer-group text-stone-500 mr-1';
+                btnIcon.className = 'fas fa-layer-group text-[#8d6e63] mr-1';
                 d3.selectAll('.terrain-active').classed('terrain-active', false);
                 if(selectedTerrain) selectedTerrain = null;
             }
@@ -621,20 +742,6 @@
                     return cInfo && cInfo.wcGroup && cInfo.wcGroup.substring(0, 2) === targetGroup && d.properties.name !== selectedCountryId;
                 });
                 d3.select(`#country-${selectedCountryId.replace(/\s+/g, '-')}`).classed('active', true);
-            } else if (currentMode === 'battle') {
-                d3.select(`#country-${selectedCountryId.replace(/\s+/g, '-')}`).classed('active', true);
-                if(battleOpponents.length > 0) {
-                    battleOpponents.forEach((opp, idx) => {
-                        d3.select(`#country-${opp.replace(/\s+/g, '-')}`).classed(`battle-target-${idx}`, true);
-                    });
-                }
-            } else if (currentMode === 'battle_arena') {
-                d3.select(`#country-${selectedCountryId.replace(/\s+/g, '-')}`).classed('active', true);
-                if (currentOpponentId) {
-                    const oppIdx = battleOpponents.indexOf(currentOpponentId);
-                    const targetClass = oppIdx !== -1 ? `battle-target-${oppIdx}` : 'battle-target-0';
-                    d3.select(`#country-${currentOpponentId.replace(/\s+/g, '-')}`).classed(targetClass, true);
-                }
             } else {
                 d3.select(`#country-${selectedCountryId.replace(/\s+/g, '-')}`).classed('active', true);
             }
@@ -642,14 +749,14 @@
 
         function goHome() {
             stopQuizTimer(); 
+            stopEscapeTimer();
             isAnimating = false;
             currentMode = 'home';
             selectedCountryId = null;
             selectedTerrain = null;
-            battleOpponents = [];
             
             const homeScreen = document.getElementById('home-screen');
-            homeScreen.style.display = 'block'; // block으로 변경 (내부 min-h-full 구조 사용)
+            homeScreen.style.display = 'block'; 
             setTimeout(() => { homeScreen.style.opacity = '1'; }, 10);
             
             resetMapStyles();
@@ -664,8 +771,16 @@
             d3.selectAll('.terrain-active').classed('terrain-active', false);
             d3.selectAll('.tropic-element').style('display', 'none');
             document.getElementById('layer-toggle-text').innerText = '자연환경 보기';
-            document.getElementById('layer-toggle-icon').className = 'fas fa-layer-group text-stone-500 mr-1';
+            document.getElementById('layer-toggle-icon').className = 'fas fa-layer-group text-[#8d6e63] mr-1';
             
+            // 지도와 패널 레이아웃 원상복구
+            const mapContainer = document.getElementById('map-container');
+            const panelContainer = document.getElementById('panel-container');
+            mapContainer.style.display = 'block';
+            panelContainer.classList.add('lg:w-2/5');
+            panelContainer.classList.remove('lg:w-full', 'w-full');
+            panelContainer.classList.add('bg-[url(\'https://www.transparenttextures.com/patterns/aged-paper.png\')]');
+
             document.getElementById('panel-container').innerHTML = '';
         }
 
@@ -682,9 +797,6 @@
             stopQuizTimer(); 
             isAnimating = false;
             currentMode = mode;
-            battleOpponents = [];
-            currentOpponentId = null;
-            battleState = 'select_stat';
             selectedTerrain = null;
             
             document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
@@ -692,47 +804,66 @@
             if(activeBtn) activeBtn.classList.add('active');
 
             const mapLegend = document.getElementById('map-legend');
-            mapLegend.style.display = 'block';
-            d3.selectAll('.capital-dot').style('display', 'block');
-            
             const layerBtn = document.getElementById('layer-toggle-btn');
+            const mapContainer = document.getElementById('map-container');
+            const panelContainer = document.getElementById('panel-container');
 
-            if (mode === 'study') {
-                layerBtn.style.display = 'block';
-                d3.selectAll('.tropic-element').style('display', 'block');
-            } else {
+            if(mode === 'escape') {
+                // 방탈출 모드 초기화
                 layerBtn.style.display = 'none';
+                mapLegend.style.display = 'none';
+                d3.selectAll('.capital-dot').style('display', 'none');
                 showTerrain = false;
                 d3.selectAll('.terrain-feature').style('display', 'none');
-                d3.selectAll('.terrain-active').classed('terrain-active', false);
                 d3.selectAll('.tropic-element').style('display', 'none');
-                document.getElementById('layer-toggle-text').innerText = '자연환경 보기';
-                document.getElementById('layer-toggle-icon').className = 'fas fa-layer-group text-stone-500 mr-1';
-            }
+                
+                escapeState = 'login';
+                resetMapStyles();
+                d3.select('#map').transition().duration(1000).call(zoom.transform, d3.zoomIdentity);
+            } else {
+                // 일반 모드들 레이아웃 복원
+                mapContainer.style.display = 'block';
+                panelContainer.className = 'w-full h-[55%] lg:w-2/5 lg:h-full bg-[#fdfbf7] overflow-y-auto relative flex-shrink-0 lg:flex-shrink transition-all duration-500 bg-[url(\'https://www.transparenttextures.com/patterns/aged-paper.png\')]';
+                mapLegend.style.display = 'block';
+                d3.selectAll('.capital-dot').style('display', 'block');
+                
+                if (mode === 'study') {
+                    layerBtn.style.display = 'block';
+                    d3.selectAll('.tropic-element').style('display', 'block');
+                } else {
+                    layerBtn.style.display = 'none';
+                    showTerrain = false;
+                    d3.selectAll('.terrain-feature').style('display', 'none');
+                    d3.selectAll('.terrain-active').classed('terrain-active', false);
+                    d3.selectAll('.tropic-element').style('display', 'none');
+                    document.getElementById('layer-toggle-text').innerText = '자연환경 보기';
+                    document.getElementById('layer-toggle-icon').className = 'fas fa-layer-group text-[#8d6e63] mr-1';
+                }
 
-            if(mode === 'study') {
-                mapLegend.innerHTML = '<i class="fas fa-circle text-[8px] mr-1"></i> 각국의 수도 위치';
-                resetMapStyles();
-                highlightSelectedCountry();
-            } else if (mode === 'worldcup') {
-                mapLegend.innerHTML = '<strong class="text-stone-800">대한민국 FIFA 랭킹: 23위</strong>';
-                resetMapStyles();
-                highlightSelectedCountry();
-            } else if (mode === 'battle') {
-                mapLegend.innerHTML = '기준 국가를 먼저 선택하세요';
-                resetMapStyles();
-                if(selectedCountryId) generateBattleOpponents();
-                highlightSelectedCountry();
-            } else { // quiz
-                d3.selectAll('.capital-dot').style('display', 'none');
-                mapLegend.style.display = 'none';
-                startQuiz();
+                if(mode === 'study') {
+                    mapLegend.innerHTML = '<i class="fas fa-circle text-[8px] mr-1"></i> 각국의 수도 위치';
+                    resetMapStyles();
+                    highlightSelectedCountry();
+                } else if (mode === 'worldcup') {
+                    mapLegend.innerHTML = '<strong class="text-[#3e2723]">대한민국 FIFA 랭킹: 23위</strong>';
+                    resetMapStyles();
+                    highlightSelectedCountry();
+                } else { // quiz
+                    d3.selectAll('.capital-dot').style('display', 'none');
+                    mapLegend.style.display = 'none';
+                    startQuiz();
+                }
             }
             
-            d3.selectAll('.country').attr('fill', d => getCountryColor(d));
+            if(mode !== 'escape') {
+                d3.selectAll('.country').attr('fill', d => getCountryColor(d));
+            }
             renderPanel();
         }
 
+        // ==========================================
+        // 2. 영토 퀴즈 로직
+        // ==========================================
         function startQuiz() {
             resetMapStyles();
             selectedCountryId = null;
@@ -749,40 +880,69 @@
             startQuizTimer(); 
         }
 
-        function generateBattleOpponents() {
-            if(!selectedCountryId) return;
-            const allIds = Object.keys(countryInfo);
-            let pool = allIds.filter(id => id !== selectedCountryId);
-            for (let i = pool.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [pool[i], pool[j]] = [pool[j], pool[i]];
-            }
-            battleOpponents = pool.slice(0, 3);
-        }
-
         function handleCountryClick(event, feature) {
             if (isAnimating) return;
             event.stopPropagation(); 
+            
+            const countryId = feature.properties.name;
+
+            if (currentMode === 'escape') {
+                if (escapeState === 'playing') {
+                    const data = escapeContent[escapeStoryStep];
+                    if (data.qType === 'map_click') {
+                        const clickedEl = d3.select(`#country-${countryId.replace(/\s+/g, '-')}`);
+
+                        if (countryId === data.ansTarget) {
+                            clickedEl.classed('correct', true);
+                            playDoorAnimation(() => {
+                                escapeStoryStep++;
+                                resetMapStyles(); 
+                                const nextData = escapeContent[escapeStoryStep];
+                                if(nextData.type === 'story') {
+                                    escapeState = 'story';
+                                } else if(nextData.type === 'result') {
+                                    finishEscapeRoom();
+                                    return;
+                                } else {
+                                    escapeState = 'playing';
+                                }
+                                renderPanel();
+                            });
+                        } else {
+                            clickedEl.classed('wrong', true);
+                            const wrap = document.getElementById(`esc-wrap-${escapeStoryStep}`);
+                            if (wrap) {
+                                wrap.classList.remove('shake-animation');
+                                void wrap.offsetWidth; 
+                                wrap.classList.add('shake-animation');
+                            }
+                            const err = document.getElementById(`esc-err-${escapeStoryStep}`);
+                            if (err) err.innerHTML = `<i class="fas fa-exclamation-triangle"></i> 틀렸습니다! 다시 한 번 지도를 잘 살펴보세요.`;
+
+                            setTimeout(() => {
+                                clickedEl.classed('wrong', false);
+                            }, 800);
+                        }
+                    }
+                }
+                return; // 방탈출 모드에서는 일반 클릭 이벤트 무시
+            }
+
             d3.selectAll('.terrain-active').classed('terrain-active', false);
             selectedTerrain = null;
 
-            const countryId = feature.properties.name;
-
-            if (currentMode === 'study' || currentMode === 'worldcup' || currentMode === 'battle') {
+            if (currentMode === 'study' || currentMode === 'worldcup') {
                 if(!countryInfo[countryId]) return; 
                 if (selectedCountryId === countryId) {
                     selectedCountryId = null;
-                    if (currentMode === 'battle') battleOpponents = [];
                 } else {
                     selectedCountryId = countryId;
-                    if (currentMode === 'battle') generateBattleOpponents();
                 }
                 d3.selectAll('.country').attr('fill', d => getCountryColor(d));
                 resetMapStyles();
                 highlightSelectedCountry();
                 renderPanel();
 
-                // 모바일에서 국가 클릭 시 패널(아래쪽)로 살짝 스크롤해주는 편의 기능
                 if(window.innerWidth < 1024) {
                     document.getElementById('panel-container').scrollIntoView({ behavior: 'smooth' });
                 }
@@ -822,7 +982,7 @@
         }
 
         function resetMapStyles() {
-            d3.selectAll('.country').classed('active', false).classed('correct', false).classed('wrong', false).classed('wc-group-active', false).classed('battle-target-0', false).classed('battle-target-1', false).classed('battle-target-2', false);
+            d3.selectAll('.country').classed('active', false).classed('correct', false).classed('wrong', false).classed('wc-group-active', false);
         }
 
         function startQuizTimer() {
@@ -851,11 +1011,11 @@
                 timeBar.style.width = `${percentage}%`;
                 
                 if (quizTimeRemaining <= 3) {
-                    timeBar.classList.remove('bg-blue-600');
+                    timeBar.classList.remove('bg-green-600');
                     timeBar.classList.add('bg-red-600');
                     timeText.classList.add('text-red-600');
                 } else {
-                    timeBar.classList.add('bg-blue-600');
+                    timeBar.classList.add('bg-green-600');
                     timeBar.classList.remove('bg-red-600');
                     timeText.classList.remove('text-red-600');
                 }
@@ -870,501 +1030,6 @@
             showQuizFeedback('timeout');
         }
 
-        function startBattleMatch(opponentId) {
-            currentMode = 'battle_arena';
-            currentOpponentId = opponentId;
-            battleState = 'select_stat';
-            pendingStatKey = null;
-            
-            d3.selectAll('.country').attr('fill', d => getCountryColor(d));
-            resetMapStyles();
-            highlightSelectedCountry();
-            renderPanel();
-        }
-
-        function selectBattleStat(statKey) {
-            if (battleState !== 'select_stat') return;
-            pendingStatKey = statKey;
-            battleState = 'guess';
-            
-            const statName = statKey === 'rawArea' ? '영토 면적' : (statKey === 'rawPop' ? '인구수' : 'GDP (경제 규모)');
-            
-            document.getElementById('battle-prompt').innerHTML = `
-                <div class="bg-blue-50 border border-blue-100 p-3 lg:p-4 rounded-lg">
-                    <span class="text-sm font-bold text-blue-700 tracking-wide block mb-1">🤔 나의 예측은?</span>
-                    <span class="text-sm lg:text-base text-stone-900 block">
-                        두 국가 중 <b>[${statName}]</b> 수치가 더 높을 것 같은<br>
-                        <strong class="text-blue-600 underline decoration-blue-300 underline-offset-4 cursor-pointer">국가의 카드를 클릭</strong>해서 결과를 맞춰보세요!
-                    </span>
-                </div>
-            `;
-            
-            document.getElementById('stat-buttons-container').style.display = 'none';
-            
-            const card1 = document.getElementById('card-1');
-            const card2 = document.getElementById('card-2');
-            card1.classList.add('border-blue-400', 'ring-2', 'ring-blue-200', 'cursor-pointer', 'transform', 'hover:scale-105');
-            card2.classList.add('border-blue-400', 'ring-2', 'ring-blue-200', 'cursor-pointer', 'transform', 'hover:scale-105');
-        }
-
-        function handleCardClick(guessedPlayerNum) {
-            if (battleState !== 'guess') return;
-            battleState = 'revealed';
-            
-            const card1 = document.getElementById('card-1');
-            const card2 = document.getElementById('card-2');
-            card1.classList.remove('border-blue-400', 'ring-2', 'ring-blue-200', 'cursor-pointer', 'transform', 'hover:scale-105');
-            card2.classList.remove('border-blue-400', 'ring-2', 'ring-blue-200', 'cursor-pointer', 'transform', 'hover:scale-105');
-            
-            document.getElementById('battle-prompt').innerHTML = `<span class="text-stone-400 text-xs lg:text-sm tracking-widest block mt-4">데이터를 분석하고 있습니다...</span>`;
-            
-            executeBattleOutcome(guessedPlayerNum);
-        }
-
-        function executeBattleOutcome(guessedPlayerNum) {
-            const player1 = countryInfo[selectedCountryId];
-            const player2 = countryInfo[currentOpponentId];
-            
-            const val1 = player1[pendingStatKey];
-            const val2 = player2[pendingStatKey];
-
-            setTimeout(() => {
-                document.getElementById('stat-display-1').innerHTML = `<span class="text-lg lg:text-2xl font-black text-blue-700 break-keep">${getStatDisplayString(player1, pendingStatKey)}</span>`;
-                document.getElementById('stat-display-2').innerHTML = `<span class="text-lg lg:text-2xl font-black text-blue-700 break-keep">${getStatDisplayString(player2, pendingStatKey)}</span>`;
-
-                let actualWinner = 0;
-                if (pendingStatKey === 'rawGdp') {
-                    if (val1 < val2) actualWinner = 1;
-                    else if (val2 < val1) actualWinner = 2;
-                } else {
-                    if (val1 > val2) actualWinner = 1;
-                    else if (val2 > val1) actualWinner = 2;
-                }
-
-                let isCorrect = false;
-                if (actualWinner !== 0 && actualWinner === guessedPlayerNum) {
-                    isCorrect = true;
-                    battleScore += 10;
-                    document.getElementById('battle-score-display').innerText = battleScore;
-                }
-
-                if (actualWinner === 1) {
-                    document.getElementById('card-1').classList.add('battle-winner');
-                    document.getElementById('card-2').classList.add('battle-loser');
-                    document.getElementById('goal-fx-1').style.display = 'block';
-                } else if (actualWinner === 2) {
-                    document.getElementById('card-2').classList.add('battle-winner');
-                    document.getElementById('card-1').classList.add('battle-loser');
-                    document.getElementById('goal-fx-2').style.display = 'block';
-                }
-
-                showBattleFeedback(pendingStatKey, player1, player2, actualWinner, isCorrect);
-
-                // 모바일에서 결과 영역으로 부드럽게 스크롤
-                if(window.innerWidth < 1024) {
-                    document.getElementById('battle-feedback').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                }
-
-            }, 400);
-        }
-
-        function getStatDisplayString(player, statKey) {
-            if(statKey === 'rawArea') return player.area.replace('약 ', '');
-            if(statKey === 'rawPop') return player.pop.replace('약 ', '');
-            if(statKey === 'rawGdp') return player.gdp;
-            return "";
-        }
-
-        function showBattleFeedback(statKey, p1, p2, actualWinner, isCorrect) {
-            const fbBox = document.getElementById('battle-feedback');
-            fbBox.style.display = 'block';
-
-            let subject = statKey === 'rawArea' ? '영토 면적이' : (statKey === 'rawPop' ? '인구가' : 'GDP(경제 규모)가');
-            let winnerObj = actualWinner === 1 ? p1 : (actualWinner === 2 ? p2 : null);
-            let loserObj = actualWinner === 1 ? p2 : (actualWinner === 2 ? p1 : null);
-
-            let winnerText = winnerObj ? `${winnerObj.ko} 우위` : "동일 수준";
-            let msg = "";
-
-            if (winnerObj && loserObj) {
-                if (statKey === 'rawGdp') {
-                    if (loserObj.rawGdp === 999) {
-                        msg = `<strong>${winnerObj.ko}</strong>(${winnerObj.gdp})이 통계 확인이 어려운 <strong>${loserObj.ko}</strong> 대비 높은 경제 규모를 기록합니다.`;
-                    } else {
-                        let diff = loserObj.rawGdp - winnerObj.rawGdp;
-                        msg = `<strong>${winnerObj.ko}</strong>(${winnerObj.gdp})이 <strong>${loserObj.ko}</strong>(${loserObj.gdp}) 대비 세계 순위에서 <strong>${diff}단계</strong> 앞섭니다.`;
-                    }
-                } else {
-                    let ratio = (winnerObj[statKey] / loserObj[statKey]).toFixed(1);
-                    if(ratio >= 1.5) {
-                        msg = `데이터 분석 결과, <strong>${winnerObj.ko}</strong>의 ${subject} <strong>${loserObj.ko}</strong> 대비 <strong>약 ${ratio}배</strong> 더 큰 규모를 보입니다.`;
-                    } else {
-                        msg = `<strong>${winnerObj.ko}</strong>의 ${subject} <strong>${loserObj.ko}</strong>에 비해 소폭 (약 ${ratio}배) 앞서고 있습니다.`;
-                    }
-                }
-            } else {
-                msg = `통계상 양국의 스탯 차이가 미미합니다.`;
-            }
-
-            let predictionResultHTML = isCorrect 
-                ? `<span class="text-green-700 font-bold text-sm tracking-wide"><i class="fas fa-check-circle"></i> 예측 성공 (+10점)</span>`
-                : `<span class="text-stone-400 font-bold text-sm tracking-wide"><i class="fas fa-times-circle"></i> 예측 실패</span>`;
-
-            fbBox.innerHTML = `
-                <div class="border-t border-stone-200 pt-5 mt-4">
-                    <div class="mb-3">${predictionResultHTML}</div>
-                    <h4 class="text-lg lg:text-xl font-bold text-stone-900 mb-2">${winnerText}</h4>
-                    <p class="text-xs lg:text-sm text-stone-600 leading-relaxed mb-5">${msg}</p>
-                    <button onclick="switchMode('battle')" class="w-full py-3 bg-stone-900 text-white font-medium text-sm hover:bg-stone-800 transition-colors rounded-md shadow-sm">
-                        다른 국가와 다시 대결하기
-                    </button>
-                </div>
-            `;
-        }
-
-        function renderPanel() {
-            const panel = document.getElementById('panel-container');
-            
-            if (currentMode === 'study') {
-                if (selectedTerrain) {
-                    const info = selectedTerrain;
-                    let typeName = "";
-                    let icon = "";
-                    
-                    if(info.type === 'mountain') { typeName = "산맥"; icon = "fa-mountain text-stone-600"; }
-                    else if(info.type === 'river') { typeName = "하천"; icon = "fa-water text-blue-500"; }
-                    else if(info.type === 'plain') { typeName = "평원/분지"; icon = "fa-leaf text-green-600"; }
-                    else if(info.type === 'highland') { typeName = "고원"; icon = "fa-image text-amber-600"; }
-                    else if(info.type === 'desert') { typeName = "사막"; icon = "fa-sun text-yellow-600"; }
-                    else if(info.type === 'isthmus') { typeName = "지협 (경계)"; icon = "fa-map-signs text-rose-600"; }
-                    
-                    panel.innerHTML = `
-                        <div class="p-5 lg:p-8">
-                            <div class="mb-5 lg:mb-8 border-b border-stone-200 pb-5">
-                                <span class="block text-[10px] lg:text-xs font-bold tracking-widest text-stone-400 uppercase mb-1">PHYSICAL GEOGRAPHY</span>
-                                <div class="flex items-center gap-3 mb-4">
-                                    <div class="w-8 h-8 lg:w-10 lg:h-10 rounded-full bg-stone-100 flex items-center justify-center flex-shrink-0">
-                                        <i class="fas ${icon}"></i>
-                                    </div>
-                                    <h2 class="text-2xl lg:text-3xl font-bold text-stone-900 break-keep">${info.name}</h2>
-                                    <a href="https://www.google.com/search?tbm=isch&q=${encodeURIComponent(info.name + ' 경관')}" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1 bg-stone-100 text-stone-500 hover:bg-stone-900 hover:text-white text-[10px] lg:text-xs font-bold rounded-full transition-colors duration-200 flex-shrink-0" title="${info.name} 경관 구글 이미지 검색 (새 창)">
-                                        <i class="fas fa-camera"></i> 사진
-                                    </a>
-                                </div>
-                                <span class="inline-block px-3 py-1 bg-stone-100 text-stone-600 text-[10px] lg:text-xs font-bold rounded-full">${typeName}</span>
-                            </div>
-                            
-                            <div>
-                                <span class="block text-xs font-bold text-blue-600 tracking-wider mb-2">지형 특징</span>
-                                <p class="text-xs lg:text-sm text-stone-700 leading-relaxed">${info.desc}</p>
-                            </div>
-                            
-                            <div class="mt-6 lg:mt-8">
-                                <button onclick="selectedTerrain = null; renderPanel();" class="text-xs lg:text-sm text-blue-600 font-bold hover:underline">
-                                    <i class="fas fa-arrow-left mr-1"></i> 이전 화면으로
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                    return;
-                }
-
-                if (!selectedCountryId) {
-                    let extraGuide = showTerrain ? `
-                        <div class="mt-6 lg:mt-8 bg-blue-50 border border-blue-100 p-4 rounded-xl text-blue-800 shadow-sm animate-pulse w-full max-w-sm text-left">
-                            <span class="block text-sm font-bold mb-2"><i class="fas fa-map-marked-alt mr-1"></i> 자연환경 탐색 켜짐</span>
-                            <span class="text-xs font-medium leading-relaxed block">지도에 나타난 산맥, 하천, 평원 등을 <b>클릭</b>해 보세요!<br>해당 지형이 진하게 표시되며 상세 설명이 나타납니다.</span>
-                        </div>
-                    ` : '';
-
-                    panel.innerHTML = `
-                        <div class="flex flex-col items-center justify-center h-full text-center p-6 lg:p-10 text-stone-500 min-h-[300px]">
-                            <div class="bg-stone-100 p-4 rounded-full mb-4">
-                                <i class="fas fa-hand-pointer text-2xl text-stone-400"></i>
-                            </div>
-                            <span class="block text-xl lg:text-2xl font-light text-stone-700 mb-2">지리 데이터 탐색</span>
-                            <p class="text-xs lg:text-sm text-stone-500">지도에서 아메리카 국가를 클릭하면<br>해당 국가의 상세 정보가 나타납니다.</p>
-                            ${extraGuide}
-                        </div>
-                    `;
-                    return;
-                }
-                
-                const info = countryInfo[selectedCountryId];
-                panel.innerHTML = `
-                    <div class="p-5 lg:p-8">
-                        <div class="mb-5 lg:mb-8">
-                            <p class="text-[10px] lg:text-xs font-bold tracking-widest text-stone-400 uppercase mb-1">${selectedCountryId}</p>
-                            <div class="flex items-center gap-3 mb-4">
-                                <h2 class="text-3xl lg:text-4xl font-light text-stone-900">${info.ko}</h2>
-                                <a href="https://www.google.com/search?tbm=isch&q=${encodeURIComponent(info.ko + ' 명소')}" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1 bg-stone-100 text-stone-500 hover:bg-stone-900 hover:text-white text-[10px] lg:text-xs font-bold rounded-full transition-colors duration-200" title="${info.ko} 명소 구글 이미지 검색 (새 창)">
-                                    <i class="fas fa-camera"></i> 사진
-                                </a>
-                            </div>
-                            <img src="${info.img}" alt="${info.ko} 국기" class="w-12 lg:w-16 h-auto object-contain border border-stone-200 mb-4 block">
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-y-5 lg:gap-y-6 gap-x-2 lg:gap-x-4 border-t border-b border-stone-200 py-5 lg:py-6 mb-5 lg:mb-6">
-                            <div>
-                                <span class="block text-[10px] lg:text-xs font-bold text-blue-600 tracking-wider mb-1">수도</span>
-                                <span class="block text-xs lg:text-sm text-stone-900">${info.capital}</span>
-                            </div>
-                            <div>
-                                <span class="block text-[10px] lg:text-xs font-bold text-blue-600 tracking-wider mb-1">주요 언어</span>
-                                <span class="block text-xs lg:text-sm text-stone-900">${info.lang}</span>
-                            </div>
-                            <div>
-                                <span class="block text-[10px] lg:text-xs font-bold text-blue-600 tracking-wider mb-1">인구</span>
-                                <span class="block text-xs lg:text-sm text-stone-900">${info.pop}</span>
-                                <span class="block text-[10px] lg:text-xs text-stone-400 mt-1">한국: 약 5,100만</span>
-                            </div>
-                            <div>
-                                <span class="block text-[10px] lg:text-xs font-bold text-blue-600 tracking-wider mb-1">영토 면적</span>
-                                <span class="block text-xs lg:text-sm text-stone-900">${info.area}</span>
-                                <span class="block text-[10px] lg:text-xs text-stone-400 mt-1">한국: 약 10만 km²</span>
-                            </div>
-                            <div class="col-span-2">
-                                <span class="block text-[10px] lg:text-xs font-bold text-blue-600 tracking-wider mb-1">GDP(국내총생산) 순위</span>
-                                <span class="block text-xs lg:text-sm text-stone-900">${info.gdp}</span>
-                                <span class="block text-[10px] lg:text-xs text-stone-400 mt-1">한국: 세계 14위</span>
-                            </div>
-                        </div>
-
-                        <div>
-                            <span class="block text-[10px] lg:text-xs font-bold text-blue-600 tracking-wider mb-2">국가 개요</span>
-                            <p class="text-xs lg:text-sm text-stone-700 leading-relaxed">${info.desc}</p>
-                        </div>
-                    </div>
-                `;
-            } else if (currentMode === 'worldcup') {
-                if (!selectedCountryId) {
-                    panel.innerHTML = `
-                        <div class="flex flex-col items-center justify-center h-full text-center p-6 lg:p-10 text-stone-500 min-h-[300px]">
-                            <div class="bg-stone-100 p-4 rounded-full mb-4">
-                                <i class="fas fa-futbol text-2xl text-stone-400"></i>
-                            </div>
-                            <span class="block text-xl lg:text-2xl font-light text-stone-700 mb-2">월드컵 조편성</span>
-                            <p class="text-xs lg:text-sm text-stone-500 mb-6 lg:mb-8">지도에서 국가를 클릭하여<br>2026 월드컵의 조별리그 상대국을 확인하세요.</p>
-                            
-                            <div class="bg-blue-50 border border-blue-100 rounded-xl p-5 lg:p-6 text-left w-full max-w-sm shadow-sm">
-                                <span class="block text-sm font-bold text-blue-800 mb-4 flex items-center gap-2">
-                                    <i class="fas fa-palette"></i> 지도 색상 범례
-                                </span>
-                                <ul class="text-xs lg:text-sm text-blue-800 space-y-3 font-medium">
-                                    <li class="flex items-center"><span class="inline-block w-4 h-4 rounded bg-[#93c5fd] mr-3 border border-blue-200"></span>본선 진출 성공 국가</li>
-                                    <li class="flex items-center"><span class="inline-block w-4 h-4 rounded bg-[#e7e5e4] mr-3 border border-stone-300"></span>본선 진출 실패 국가</li>
-                                    <li class="flex items-center"><span class="inline-block w-4 h-4 rounded bg-[#292524] mr-3"></span>선택한 기준 국가</li>
-                                    <li class="flex items-center"><span class="inline-block w-4 h-4 rounded bg-[#0f766e] mr-3"></span>같은 조 편성 국가</li>
-                                </ul>
-                            </div>
-                        </div>
-                    `;
-                    return;
-                }
-                const info = countryInfo[selectedCountryId];
-                panel.innerHTML = `
-                    <div class="p-5 lg:p-8">
-                        <div class="mb-5 lg:mb-8">
-                            <p class="text-[10px] lg:text-xs font-bold tracking-widest text-stone-400 uppercase mb-1">2026 WORLD CUP</p>
-                            <h2 class="text-3xl lg:text-4xl font-light text-stone-900">${info.ko}</h2>
-                        </div>
-
-                        <div class="bg-stone-50 border border-stone-200 p-5 lg:p-6 mb-5 lg:mb-6 rounded-lg">
-                            <div class="mb-5 lg:mb-6 pb-5 border-b border-stone-200">
-                                <span class="block text-[10px] lg:text-xs font-bold text-blue-600 tracking-wider mb-1">FIFA RANKING</span>
-                                <span class="block text-2xl lg:text-3xl font-bold text-stone-900">${info.fifa}</span>
-                            </div>
-                            <div class="mb-5 lg:mb-6">
-                                <span class="block text-[10px] lg:text-xs font-bold text-blue-600 tracking-wider mb-1">GROUP</span>
-                                <span class="block text-lg lg:text-xl font-medium text-stone-900">${info.wcGroup}</span>
-                            </div>
-                            <div>
-                                <span class="block text-[10px] lg:text-xs font-bold text-blue-600 tracking-wider mb-2">상대국</span>
-                                <p class="text-sm text-stone-700 leading-relaxed font-bold">${info.wcOpponents}</p>
-                            </div>
-                        </div>
-                        
-                        <div class="bg-blue-50 border border-blue-100 rounded-lg p-4">
-                            <p class="text-[10px] lg:text-xs text-blue-800 leading-relaxed">
-                                💡 본선 진출국은 <strong>푸른색</strong>, 진출 실패국은 <strong>회색</strong>입니다.<br>
-                                지도에서 선택한 국가는 <strong>검은색</strong>으로, 같은 조에 편성된 상대 국가는 <strong>청록색</strong>으로 표시됩니다.
-                            </p>
-                        </div>
-                    </div>
-                `;
-            } else if (currentMode === 'battle') {
-                if (!selectedCountryId) {
-                    panel.innerHTML = `
-                        <div class="flex flex-col items-center justify-center h-full text-center p-6 lg:p-10 text-stone-500 min-h-[300px]">
-                            <div class="bg-stone-100 p-4 rounded-full mb-4">
-                                <i class="fas fa-hand-pointer text-2xl text-stone-400"></i>
-                            </div>
-                            <span class="block text-xl lg:text-2xl font-light text-stone-700 mb-2">기준 국가 선택</span>
-                            <p class="text-xs lg:text-sm text-stone-500">가장 먼저 지도에서<br>기준이 될 국가를 하나 선택해주세요.</p>
-                        </div>
-                    `;
-                    return;
-                }
-
-                const player = countryInfo[selectedCountryId];
-                const colors = ['bg-red-700', 'bg-blue-700', 'bg-amber-700']; 
-                
-                let opponentsHTML = battleOpponents.map((oppId, idx) => {
-                    let op = countryInfo[oppId];
-                    return `
-                        <div class="border border-stone-200 p-3 lg:p-4 flex justify-between items-center group hover:border-stone-400 transition-colors bg-white rounded-md shadow-sm">
-                            <div class="flex items-center gap-3">
-                                <div class="w-3 h-3 rounded-full ${colors[idx]} flex-shrink-0"></div>
-                                <span class="text-xs lg:text-sm font-bold text-stone-900 break-keep">${op.ko}</span>
-                            </div>
-                            <button onclick="startBattleMatch('${oppId}')" class="px-2 lg:px-3 py-1 lg:py-1.5 bg-stone-100 text-[10px] lg:text-xs font-bold text-stone-600 group-hover:bg-stone-900 group-hover:text-white transition-colors rounded whitespace-nowrap">
-                                선택하기
-                            </button>
-                        </div>
-                    `;
-                }).join('');
-
-                panel.innerHTML = `
-                    <div class="p-5 lg:p-8">
-                        <div class="mb-5 lg:mb-8 border-b border-stone-200 pb-5">
-                            <span class="block text-[10px] lg:text-xs font-bold tracking-widest text-stone-400 uppercase mb-1">BASE COUNTRY</span>
-                            <h2 class="text-2xl lg:text-3xl font-light text-stone-900 flex items-center gap-3">
-                                ${player.ko}
-                            </h2>
-                        </div>
-                        
-                        <div class="bg-stone-50 p-4 lg:p-5 rounded-lg border border-stone-200">
-                            <span class="block text-xs lg:text-sm font-bold text-stone-700 mb-1">👉 상대 국가 선택</span>
-                            <p class="text-[10px] lg:text-xs text-stone-500 mb-4">아래 매칭된 국가 중 대결을 펼칠 상대를 고르세요.</p>
-                            <div class="space-y-2 lg:space-y-3">
-                                ${opponentsHTML}
-                            </div>
-                        </div>
-                    </div>
-                `;
-
-            } else if (currentMode === 'battle_arena') {
-                const p1 = countryInfo[selectedCountryId];
-                const p2 = countryInfo[currentOpponentId];
-
-                panel.innerHTML = `
-                    <div class="p-5 lg:p-8 h-full flex flex-col">
-                        <div class="flex justify-between items-end mb-6 lg:mb-8 pb-4 border-b border-stone-200">
-                            <div>
-                                <span class="block text-[10px] lg:text-xs font-bold tracking-widest text-stone-400 uppercase mb-1">SIMULATION</span>
-                                <h2 class="text-xl lg:text-2xl font-bold text-stone-900">통계 배틀</h2>
-                            </div>
-                            <div class="text-right bg-stone-100 px-2 lg:px-3 py-1 lg:py-1.5 rounded-lg border border-stone-200">
-                                <span class="text-[10px] lg:text-xs font-bold text-stone-500 mr-1 lg:mr-2">누적 점수</span>
-                                <span id="battle-score-display" class="text-base lg:text-lg font-bold text-blue-600">${battleScore}</span><span class="text-xs text-stone-500 ml-1">점</span>
-                            </div>
-                        </div>
-                        
-                        <div id="battle-prompt" class="mb-5 lg:mb-6 text-center">
-                            <span class="text-xs lg:text-sm font-bold text-stone-700 block bg-stone-100 p-2 lg:p-3 rounded-md">👇 아래 버튼을 눌러 비교할 통계를 선택하세요.</span>
-                        </div>
-
-                        <!-- 양국 카드 -->
-                        <div class="grid grid-cols-2 gap-2 lg:gap-4 mb-5 lg:mb-6">
-                            <div id="card-1" class="border border-stone-200 p-3 lg:p-5 bg-white relative transition-all rounded-lg shadow-sm flex flex-col items-center text-center" onclick="handleCardClick(1)">
-                                <div id="goal-fx-1" class="absolute top-1 right-1 lg:top-2 lg:right-2 hidden">
-                                    <span class="text-[9px] lg:text-xs font-bold text-red-600 bg-red-50 border border-red-200 px-1.5 py-0.5 lg:px-2 lg:py-1 rounded shadow-sm">WINNER</span>
-                                </div>
-                                <span class="block text-[10px] lg:text-xs font-bold text-stone-400 mb-2 w-full border-b border-stone-100 pb-2">나의 국가</span>
-                                <h3 class="font-bold text-lg lg:text-xl text-stone-900 mb-3 lg:mb-4 break-keep">${p1.ko}</h3>
-                                <div id="stat-display-1" class="w-full mt-auto bg-stone-50 border border-stone-100 rounded-md py-2 lg:py-3 px-1 lg:px-2 flex items-center justify-center min-h-[3rem] lg:min-h-[4rem]">
-                                    <span class="text-lg lg:text-2xl font-light text-stone-300">?</span>
-                                </div>
-                            </div>
-
-                            <div id="card-2" class="border border-stone-200 p-3 lg:p-5 bg-white relative transition-all rounded-lg shadow-sm flex flex-col items-center text-center" onclick="handleCardClick(2)">
-                                <div id="goal-fx-2" class="absolute top-1 right-1 lg:top-2 lg:right-2 hidden">
-                                    <span class="text-[9px] lg:text-xs font-bold text-red-600 bg-red-50 border border-red-200 px-1.5 py-0.5 lg:px-2 lg:py-1 rounded shadow-sm">WINNER</span>
-                                </div>
-                                <span class="block text-[10px] lg:text-xs font-bold text-stone-400 mb-2 w-full border-b border-stone-100 pb-2">상대 국가</span>
-                                <h3 class="font-bold text-lg lg:text-xl text-stone-900 mb-3 lg:mb-4 break-keep">${p2.ko}</h3>
-                                <div id="stat-display-2" class="w-full mt-auto bg-stone-50 border border-stone-100 rounded-md py-2 lg:py-3 px-1 lg:px-2 flex items-center justify-center min-h-[3rem] lg:min-h-[4rem]">
-                                    <span class="text-lg lg:text-2xl font-light text-stone-300">?</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 대결 스탯 버튼 그룹 -->
-                        <div id="stat-buttons-container" class="space-y-2 lg:space-y-3">
-                            <button onclick="selectBattleStat('rawArea')" class="w-full py-3 lg:py-4 border border-stone-300 bg-stone-50 hover:bg-stone-900 text-stone-700 hover:text-white font-bold text-xs lg:text-sm transition-colors rounded-lg shadow-sm">
-                                영토 면적으로 대결하기
-                            </button>
-                            <button onclick="selectBattleStat('rawPop')" class="w-full py-3 lg:py-4 border border-stone-300 bg-stone-50 hover:bg-stone-900 text-stone-700 hover:text-white font-bold text-xs lg:text-sm transition-colors rounded-lg shadow-sm">
-                                인구수로 대결하기
-                            </button>
-                            <button onclick="selectBattleStat('rawGdp')" class="w-full py-3 lg:py-4 border border-stone-300 bg-stone-50 hover:bg-stone-900 text-stone-700 hover:text-white font-bold text-xs lg:text-sm transition-colors rounded-lg shadow-sm">
-                                GDP (경제 규모)로 대결하기
-                            </button>
-                        </div>
-
-                        <div id="battle-feedback" class="hidden pb-4"></div>
-                    </div>
-                `;
-
-            } else if (currentMode === 'quiz') {
-                const targetId = quizQuestions[currentQIndex];
-                const targetKo = countryInfo[targetId].ko;
-
-                panel.innerHTML = `
-                    <div class="p-5 lg:p-8 h-full flex flex-col justify-between">
-                        <div>
-                            <div class="flex justify-between items-end border-b border-stone-200 pb-3 lg:pb-4 mb-5 lg:mb-6">
-                                <div>
-                                    <span class="block text-[10px] lg:text-xs font-bold tracking-widest text-stone-400 uppercase mb-1">GEOGRAPHY QUIZ</span>
-                                    <span class="text-xs lg:text-sm text-stone-900 font-bold">문제 ${currentQIndex + 1} / ${quizQuestions.length}</span>
-                                </div>
-                                <div class="text-right">
-                                    <span class="block text-[10px] lg:text-xs font-bold text-blue-600 uppercase tracking-widest mb-1">SCORE</span>
-                                    <span class="text-lg lg:text-xl font-bold text-blue-600">${score}</span>
-                                </div>
-                            </div>
-                            
-                            <div class="w-full bg-stone-200 rounded-full h-1.5 lg:h-2 mb-2">
-                                <div id="quiz-time-bar" class="bg-blue-600 h-1.5 lg:h-2 rounded-full transition-all duration-1000 ease-linear" style="width: 100%"></div>
-                            </div>
-                            <div class="text-right text-[10px] lg:text-xs font-bold text-stone-500 mb-5 lg:mb-8">남은 시간: <span id="quiz-time-text" class="text-stone-900 text-sm lg:text-base">10</span>초</div>
-                            
-                            <div class="text-center bg-stone-50 py-8 lg:py-10 px-4 rounded-xl border border-stone-200">
-                                <span class="block text-xs lg:text-sm font-bold text-stone-600 mb-3 lg:mb-4">👇 10초 안에 아래 국가를 클릭하세요!</span>
-                                <h2 class="text-4xl lg:text-5xl font-bold text-stone-900 tracking-tight">${targetKo}</h2>
-                            </div>
-                        </div>
-                        
-                        <div id="quiz-feedback" class="py-4 text-center opacity-0 transition-opacity duration-300"></div>
-                    </div>
-                `;
-            } else if (currentMode === 'result') {
-                panel.innerHTML = `
-                    <div class="p-5 lg:p-8 flex flex-col h-full items-center justify-center text-center">
-                        <div class="w-12 h-12 lg:w-16 lg:h-16 bg-stone-100 rounded-full flex items-center justify-center mb-4">
-                            <i class="fas fa-check text-xl lg:text-2xl text-stone-500"></i>
-                        </div>
-                        <span class="block text-[10px] lg:text-xs font-bold tracking-widest text-stone-400 uppercase mb-2">ASSESSMENT COMPLETE</span>
-                        <h2 class="text-2xl lg:text-3xl font-light text-stone-900 mb-6 lg:mb-8">영토 퀴즈 완료</h2>
-                        
-                        <div class="mb-8 lg:mb-12 bg-stone-50 w-full py-6 lg:py-8 rounded-xl border border-stone-200">
-                            <span class="block text-xs lg:text-sm font-bold text-stone-500 mb-2">최종 점수</span>
-                            <div class="text-5xl lg:text-7xl font-bold text-blue-600">${score}</div>
-                        </div>
-
-                        <div class="w-full space-y-3 max-w-xs mx-auto">
-                            <button onclick="switchMode('study')" class="w-full py-3 border border-stone-300 text-stone-700 text-xs lg:text-sm font-bold hover:bg-stone-100 transition-colors rounded-lg">
-                                탐색 모드로 돌아가기
-                            </button>
-                            <button onclick="switchMode('quiz')" class="w-full py-3 bg-stone-900 text-white text-xs lg:text-sm font-bold hover:bg-stone-800 transition-colors rounded-lg shadow-md">
-                                다시 도전하기
-                            </button>
-                        </div>
-                    </div>
-                `;
-            }
-        }
-
         function showQuizFeedback(type, clickedCountryId = null) {
             const feedbackEl = document.getElementById('quiz-feedback');
             if(!feedbackEl) return;
@@ -1376,7 +1041,7 @@
             } else if (type === 'timeout') {
                 feedbackEl.innerHTML = `
                     <div class="mb-3 lg:mb-4 text-red-600 font-bold text-xs lg:text-sm tracking-wide"><i class="fas fa-clock"></i> 시간 초과! 올바른 위치가 초록색으로 표시됩니다.</div>
-                    <button onclick="nextQuestion()" class="px-5 lg:px-6 py-2 border border-stone-300 text-stone-700 font-bold text-xs lg:text-sm hover:bg-stone-100 transition-colors rounded-md shadow-sm">다음 문제로 넘어가기</button>
+                    <button onclick="nextQuestion()" class="px-5 lg:px-6 py-2 border-2 border-[#d7ccc8] text-[#5d4037] font-bold text-xs lg:text-sm hover:bg-[#e6e2d8] transition-colors rounded-xl shadow-sm">다음 문제로 넘어가기</button>
                 `;
             } else {
                 let clickedNameKo = "알 수 없는 지역";
@@ -1384,11 +1049,673 @@
 
                 feedbackEl.innerHTML = `
                     <div class="mb-2 text-red-600 font-bold text-xs lg:text-sm tracking-wide"><i class="fas fa-times-circle"></i> 오답입니다!</div>
-                    <div class="mb-3 lg:mb-4 text-[10px] lg:text-sm text-stone-600 bg-stone-100 py-2 px-3 lg:px-4 rounded-lg inline-block">
+                    <div class="mb-3 lg:mb-4 text-[10px] lg:text-sm text-[#5d4037] bg-white border border-[#d7ccc8] py-2 px-3 lg:px-4 rounded-xl inline-block shadow-sm">
                         방금 선택하신 곳은 <strong>[${clickedNameKo}]</strong>입니다.<br>올바른 위치가 초록색으로 표시됩니다.
                     </div>
                     <br>
-                    <button onclick="nextQuestion()" class="px-5 lg:px-6 py-2 border border-stone-300 text-stone-700 font-bold text-xs lg:text-sm hover:bg-stone-100 transition-colors rounded-md shadow-sm">다음 문제로 넘어가기</button>
+                    <button onclick="nextQuestion()" class="px-5 lg:px-6 py-2 border-2 border-[#d7ccc8] text-[#5d4037] font-bold text-xs lg:text-sm hover:bg-[#e6e2d8] transition-colors rounded-xl shadow-sm">다음 문제로 넘어가기</button>
+                `;
+            }
+        }
+
+        // ==========================================
+        // 4. 방탈출(전체화면 탐험) 로직
+        // ==========================================
+        function beginEscapeRoom() {
+            const c = document.getElementById('esc-class').value;
+            const n = document.getElementById('esc-name').value.trim();
+            const errEl = document.getElementById('login-error');
+            
+            if(!c || !n) {
+                if(errEl) {
+                    errEl.innerText = "반과 이름을 정확히 입력해주세요!";
+                    errEl.classList.remove('hidden');
+                }
+                return;
+            }
+            if(errEl) errEl.classList.add('hidden');
+            
+            escapeClass = c;
+            escapeName = n;
+            escapeStoryStep = 0;
+            escapeState = 'story';
+            renderPanel();
+        }
+
+        function nextEscapeStep() {
+            if(escapeState === 'story') {
+                escapeStoryStep++;
+                if(escapeStoryStep >= escapeContent.length) return;
+                const nextData = escapeContent[escapeStoryStep];
+                
+                if(nextData.type === 'quiz') {
+                    escapeState = 'playing';
+                    // 첫 문제 진입 시 타이머 구동
+                    if(!escapeStartTime) startEscapeTimer();
+                } else if(nextData.type === 'result') {
+                    finishEscapeRoom();
+                    return;
+                }
+                renderPanel();
+            }
+        }
+
+        function submitEscapeAnswer(qIdx) {
+            const qData = escapeContent[qIdx];
+            let isCorrect = false;
+
+            if(qData.qType === 'subjective') {
+                const inputVal = document.getElementById(`esc-input-${qIdx}`).value.replace(/\s+/g, '');
+                const validAns = qData.ans.map(a => a.replace(/\s+/g, ''));
+                if(validAns.includes(inputVal)) isCorrect = true;
+            } else if(qData.qType === 'objective') {
+                const checked = document.querySelector(`input[name="esc-opt-${qIdx}"]:checked`);
+                if(checked && parseInt(checked.value) === qData.ansIdx) isCorrect = true;
+            }
+
+            if(isCorrect) {
+                // 문이 열리는 애니메이션 오버레이 실행 후 다음 퀴즈 진행
+                playDoorAnimation(() => {
+                    escapeStoryStep++;
+                    const nextData = escapeContent[escapeStoryStep];
+                    if(nextData.type === 'story') {
+                        escapeState = 'story';
+                    } else if(nextData.type === 'result') {
+                        finishEscapeRoom();
+                        return;
+                    } else {
+                        escapeState = 'playing';
+                    }
+                    renderPanel();
+                });
+            } else {
+                // 오답 시 흔들림 애니메이션 및 힌트 제공
+                const wrap = document.getElementById(`esc-wrap-${qIdx}`);
+                wrap.classList.remove('shake-animation');
+                void wrap.offsetWidth; 
+                wrap.classList.add('shake-animation');
+                
+                const err = document.getElementById(`esc-err-${qIdx}`);
+                err.innerHTML = `<i class="fas fa-exclamation-triangle"></i> 오답입니다! 배운 지식을 다시 떠올려보세요.`;
+            }
+        }
+
+        function playDoorAnimation(callback) {
+            const overlay = document.getElementById('door-overlay');
+            const doorLeft = document.getElementById('door-left');
+            const doorRight = document.getElementById('door-right');
+            const doorText = document.getElementById('door-text');
+
+            // 초기 상태 세팅 (닫혀있음)
+            doorLeft.style.transform = 'translateX(0)';
+            doorRight.style.transform = 'translateX(0)';
+            doorText.style.opacity = '1';
+            overlay.classList.remove('hidden');
+
+            // 0.6초 후 문 열림
+            setTimeout(() => {
+                doorLeft.style.transform = 'translateX(-100%)';
+                doorRight.style.transform = 'translateX(100%)';
+                doorText.style.opacity = '0';
+            }, 600);
+
+            // 애니메이션 종료 후 콜백 실행 (다음 화면 렌더링)
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+                callback();
+            }, 1600);
+        }
+
+        function startEscapeTimer() {
+            escapeStartTime = Date.now();
+            escapeTimerInterval = setInterval(() => {
+                escapeTimeElapsed = Date.now() - escapeStartTime;
+                const txt = document.getElementById('esc-live-timer');
+                if(txt) txt.innerText = formatTime(escapeTimeElapsed);
+            }, 10);
+        }
+
+        function stopEscapeTimer() { clearInterval(escapeTimerInterval); }
+
+        function formatTime(ms) {
+            let totalSec = Math.floor(ms / 1000);
+            let m = Math.floor(totalSec / 60);
+            let s = totalSec % 60;
+            let milli = Math.floor((ms % 1000) / 10);
+            return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}.${milli.toString().padStart(2, '0')}`;
+        }
+
+        // --- 추가된 기능: 기록 초기화 로직 (암호 보호) ---
+        window.handleResetClick = function() {
+            const modal = document.getElementById('password-modal');
+            if(modal) {
+                modal.classList.remove('hidden');
+                const input = document.getElementById('reset-password-input');
+                if(input) {
+                    input.value = '';
+                    input.focus();
+                }
+                const err = document.getElementById('password-error');
+                if(err) err.classList.add('hidden');
+            }
+        };
+
+        window.cancelReset = function() {
+            const modal = document.getElementById('password-modal');
+            if(modal) modal.classList.add('hidden');
+        };
+
+        window.confirmResetPassword = function() {
+            const input = document.getElementById('reset-password-input');
+            const err = document.getElementById('password-error');
+            
+            if(input && input.value === '아메리카1234') {
+                // 실제 삭제 수행
+                localStorage.removeItem('america_escape_rankings_v2');
+                window.globalEscapeRankings = [];
+                if (window.isFirebaseReady && window.clearCloudRankings) {
+                    window.clearCloudRankings();
+                }
+                showLeaderboard(); // 화면 즉시 새로고침
+            } else {
+                // 오류 표시
+                if(err) err.classList.remove('hidden');
+            }
+        };
+        // ------------------------------------
+
+        // 실시간 연동을 위해 랭킹 화면 갱신 함수를 전역에 등록
+        window.refreshLeaderboard = function() {
+            if (currentMode === 'escape' && escapeState === 'leaderboard') {
+                renderPanel();
+            }
+        };
+
+        function finishEscapeRoom() {
+            stopEscapeTimer();
+            escapeState = 'result';
+            
+            const rankingData = { class: escapeClass, name: escapeName, timeMs: escapeTimeElapsed, timeStr: formatTime(escapeTimeElapsed), date: new Date().toISOString() };
+            
+            // 실시간 클라우드 DB에 기록 저장
+            if (window.isFirebaseReady && window.saveRankingToCloud) {
+                window.saveRankingToCloud(rankingData);
+            } else {
+                console.warn("실시간 서버가 연결되지 않아 기록이 저장되지 않았습니다.");
+                // 임시로 현재 화면에만 띄워주기
+                window.globalEscapeRankings.push(rankingData);
+            }
+            
+            renderPanel();
+        }
+
+        function showLeaderboard() {
+            escapeState = 'leaderboard';
+            renderPanel();
+        }
+
+        // ==========================================
+        // UI 렌더링 영역
+        // ==========================================
+        function renderPanel() {
+            const panel = document.getElementById('panel-container');
+            
+            if (currentMode === 'study') {
+                if (selectedTerrain) {
+                    const info = selectedTerrain;
+                    let typeName = "";
+                    let icon = "";
+                    
+                    if(info.type === 'mountain') { typeName = "산맥"; icon = "fa-mountain text-[#5d4037]"; }
+                    else if(info.type === 'river') { typeName = "하천"; icon = "fa-water text-[#1565c0]"; }
+                    else if(info.type === 'plain') { typeName = "평원/분지"; icon = "fa-leaf text-[#2e7d32]"; }
+                    else if(info.type === 'highland') { typeName = "고원"; icon = "fa-image text-[#e65100]"; }
+                    else if(info.type === 'desert') { typeName = "사막"; icon = "fa-sun text-[#f57f17]"; }
+                    else if(info.type === 'isthmus') { typeName = "지협 (경계)"; icon = "fa-map-signs text-[#c62828]"; }
+                    
+                    panel.innerHTML = `
+                        <div class="p-5 lg:p-8">
+                            <div class="mb-5 lg:mb-8 border-b-2 border-[#e6e2d8] pb-5">
+                                <span class="block text-[10px] lg:text-xs font-bold tracking-widest text-[#a1887f] uppercase mb-1">PHYSICAL GEOGRAPHY</span>
+                                <div class="flex items-center gap-3 mb-4">
+                                    <div class="w-8 h-8 lg:w-10 lg:h-10 rounded-full bg-white border border-[#d7ccc8] flex items-center justify-center flex-shrink-0 shadow-sm">
+                                        <i class="fas ${icon}"></i>
+                                    </div>
+                                    <h2 class="text-2xl lg:text-3xl font-adventure font-bold text-[#3e2723] break-keep">${info.name}</h2>
+                                    <a href="https://www.google.com/search?tbm=isch&q=${encodeURIComponent(info.name + ' 경관')}" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-[#d7ccc8] text-[#5d4037] hover:bg-[#3e2723] hover:text-white text-[10px] lg:text-xs font-bold rounded-full transition-all flex-shrink-0 shadow-sm" title="${info.name} 경관 구글 이미지 검색 (새 창)">
+                                        <i class="fas fa-camera"></i> 사진
+                                    </a>
+                                </div>
+                                <span class="inline-block px-3 py-1 bg-[#e6e2d8] text-[#5d4037] text-[10px] lg:text-xs font-bold rounded-full">${typeName}</span>
+                            </div>
+                            
+                            <div>
+                                <span class="block text-xs font-bold text-[#1565c0] tracking-wider mb-2">지형 특징</span>
+                                <p class="text-xs lg:text-sm text-[#4e342e] leading-relaxed font-medium">${info.desc}</p>
+                            </div>
+                            
+                            <div class="mt-6 lg:mt-8">
+                                <button onclick="selectedTerrain = null; renderPanel();" class="text-xs lg:text-sm text-[#5d4037] font-bold hover:underline">
+                                    <i class="fas fa-arrow-left mr-1"></i> 이전 화면으로
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                if (!selectedCountryId) {
+                    let extraGuide = showTerrain ? `
+                        <div class="mt-6 lg:mt-8 bg-white border border-[#c2b8a3] p-4 rounded-xl text-[#3e2723] shadow-sm animate-pulse w-full max-w-sm text-left">
+                            <span class="block text-sm font-bold mb-2 text-[#2e7d32]"><i class="fas fa-map-marked-alt mr-1"></i> 자연환경 탐색 켜짐</span>
+                            <span class="text-xs font-medium leading-relaxed block text-[#5d4037]">지도에 나타난 산맥, 하천, 평원 등을 <b>클릭</b>해 보세요!<br>해당 지형이 진하게 표시되며 상세 설명이 나타납니다.</span>
+                        </div>
+                    ` : '';
+
+                    panel.innerHTML = `
+                        <div class="flex flex-col items-center justify-center h-full text-center p-6 lg:p-10 text-[#6d4c41] min-h-[300px]">
+                            <div class="bg-white border-2 border-[#e6e2d8] p-4 rounded-full mb-4 shadow-sm">
+                                <i class="fas fa-hand-pointer text-2xl text-[#8d6e63]"></i>
+                            </div>
+                            <span class="block text-xl lg:text-2xl font-adventure font-bold text-[#3e2723] mb-2">지리 데이터 탐색</span>
+                            <p class="text-xs lg:text-sm text-[#8d6e63] font-medium">지도에서 아메리카 국가를 클릭하면<br>해당 국가의 상세 정보가 나타납니다.</p>
+                            ${extraGuide}
+                        </div>
+                    `;
+                    return;
+                }
+                
+                const info = countryInfo[selectedCountryId];
+                panel.innerHTML = `
+                    <div class="p-5 lg:p-8">
+                        <div class="mb-5 lg:mb-8">
+                            <p class="text-[10px] lg:text-xs font-bold tracking-widest text-[#a1887f] uppercase mb-1">${selectedCountryId}</p>
+                            <div class="flex items-center gap-3 mb-4">
+                                <h2 class="text-3xl lg:text-4xl font-adventure font-bold text-[#3e2723]">${info.ko}</h2>
+                                <a href="https://www.google.com/search?tbm=isch&q=${encodeURIComponent(info.ko + ' 명소')}" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-[#d7ccc8] text-[#5d4037] hover:bg-[#3e2723] hover:text-white text-[10px] lg:text-xs font-bold rounded-full transition-all shadow-sm" title="${info.ko} 명소 구글 이미지 검색 (새 창)">
+                                    <i class="fas fa-camera"></i> 사진
+                                </a>
+                            </div>
+                            <img src="${info.img}" alt="${info.ko} 국기" class="w-12 lg:w-16 h-auto object-contain border border-[#d7ccc8] mb-4 block shadow-sm">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-y-5 lg:gap-y-6 gap-x-2 lg:gap-x-4 border-t-2 border-b-2 border-[#e6e2d8] py-5 lg:py-6 mb-5 lg:mb-6">
+                            <div>
+                                <span class="block text-[10px] lg:text-xs font-bold text-[#1565c0] tracking-wider mb-1">수도</span>
+                                <span class="block text-xs lg:text-sm text-[#3e2723] font-bold">${info.capital}</span>
+                            </div>
+                            <div>
+                                <span class="block text-[10px] lg:text-xs font-bold text-[#1565c0] tracking-wider mb-1">주요 언어</span>
+                                <span class="block text-xs lg:text-sm text-[#3e2723] font-bold">${info.lang}</span>
+                            </div>
+                            <div>
+                                <span class="block text-[10px] lg:text-xs font-bold text-[#1565c0] tracking-wider mb-1">인구</span>
+                                <span class="block text-xs lg:text-sm text-[#3e2723] font-bold">${info.pop}</span>
+                                <span class="block text-[10px] lg:text-xs text-[#a1887f] mt-1 font-medium">한국: 약 5,100만</span>
+                            </div>
+                            <div>
+                                <span class="block text-[10px] lg:text-xs font-bold text-[#1565c0] tracking-wider mb-1">영토 면적</span>
+                                <span class="block text-xs lg:text-sm text-[#3e2723] font-bold">${info.area}</span>
+                                <span class="block text-[10px] lg:text-xs text-[#a1887f] mt-1 font-medium">한국: 약 10만 km²</span>
+                            </div>
+                            <div class="col-span-2">
+                                <span class="block text-[10px] lg:text-xs font-bold text-[#1565c0] tracking-wider mb-1">GDP(국내총생산) 순위</span>
+                                <span class="block text-xs lg:text-sm text-[#3e2723] font-bold">${info.gdp}</span>
+                                <span class="block text-[10px] lg:text-xs text-[#a1887f] mt-1 font-medium">한국: 세계 14위</span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <span class="block text-[10px] lg:text-xs font-bold text-[#2e7d32] tracking-wider mb-2">국가 개요</span>
+                            <p class="text-xs lg:text-sm text-[#4e342e] leading-relaxed font-medium">${info.desc}</p>
+                        </div>
+                    </div>
+                `;
+            } else if (currentMode === 'worldcup') {
+                if (!selectedCountryId) {
+                    panel.innerHTML = `
+                        <div class="flex flex-col items-center justify-center h-full text-center p-6 lg:p-10 text-[#6d4c41] min-h-[300px]">
+                            <div class="bg-white border-2 border-[#e6e2d8] p-4 rounded-full mb-4 shadow-sm">
+                                <i class="fas fa-futbol text-2xl text-[#8d6e63]"></i>
+                            </div>
+                            <span class="block text-xl lg:text-2xl font-adventure font-bold text-[#3e2723] mb-2">월드컵 조편성</span>
+                            <p class="text-xs lg:text-sm text-[#8d6e63] font-medium mb-6 lg:mb-8">지도에서 국가를 클릭하여<br>2026 월드컵의 조별리그 상대국을 확인하세요.</p>
+                            
+                            <div class="bg-white border border-[#c2b8a3] rounded-xl p-5 lg:p-6 text-left w-full max-w-sm shadow-sm relative overflow-hidden">
+                                <div class="absolute right-0 top-0 opacity-5 text-6xl"><i class="fas fa-trophy"></i></div>
+                                <span class="block text-sm font-bold text-[#3e2723] mb-4 flex items-center gap-2">
+                                    <i class="fas fa-palette text-[#8d6e63]"></i> 지도 색상 범례
+                                </span>
+                                <ul class="text-xs lg:text-sm text-[#5d4037] space-y-3 font-medium">
+                                    <li class="flex items-center"><span class="inline-block w-4 h-4 rounded bg-[#4fc3f7] mr-3 border border-[#0288d1]"></span>본선 진출 성공 국가</li>
+                                    <li class="flex items-center"><span class="inline-block w-4 h-4 rounded bg-[#e6e2d8] mr-3 border border-[#d7ccc8]"></span>본선 진출 실패 국가</li>
+                                    <li class="flex items-center"><span class="inline-block w-4 h-4 rounded bg-[#5d4037] mr-3"></span>선택한 기준 국가</li>
+                                    <li class="flex items-center"><span class="inline-block w-4 h-4 rounded bg-[#00695c] mr-3"></span>같은 조 편성 국가</li>
+                                </ul>
+                            </div>
+                        </div>
+                    `;
+                    return;
+                }
+                const info = countryInfo[selectedCountryId];
+                panel.innerHTML = `
+                    <div class="p-5 lg:p-8">
+                        <div class="mb-5 lg:mb-8">
+                            <p class="text-[10px] lg:text-xs font-bold tracking-widest text-[#a1887f] uppercase mb-1">2026 WORLD CUP</p>
+                            <h2 class="text-3xl lg:text-4xl font-adventure font-bold text-[#3e2723]">${info.ko}</h2>
+                        </div>
+
+                        <div class="bg-white border-2 border-[#e6e2d8] p-5 lg:p-6 mb-5 lg:mb-6 rounded-xl shadow-sm relative overflow-hidden">
+                            <div class="absolute right-[-10px] bottom-[-10px] opacity-5 text-8xl"><i class="fas fa-futbol"></i></div>
+                            <div class="mb-5 lg:mb-6 pb-5 border-b border-[#e6e2d8] relative z-10">
+                                <span class="block text-[10px] lg:text-xs font-bold text-[#1565c0] tracking-wider mb-1">FIFA RANKING</span>
+                                <span class="block text-2xl lg:text-3xl font-black text-[#3e2723]">${info.fifa}</span>
+                            </div>
+                            <div class="mb-5 lg:mb-6 relative z-10">
+                                <span class="block text-[10px] lg:text-xs font-bold text-[#1565c0] tracking-wider mb-1">GROUP</span>
+                                <span class="block text-lg lg:text-xl font-bold text-[#3e2723]">${info.wcGroup}</span>
+                            </div>
+                            <div class="relative z-10">
+                                <span class="block text-[10px] lg:text-xs font-bold text-[#c62828] tracking-wider mb-2">상대국</span>
+                                <p class="text-sm text-[#4e342e] leading-relaxed font-bold">${info.wcOpponents}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white border border-[#c2b8a3] rounded-xl p-4 shadow-sm">
+                            <p class="text-[10px] lg:text-xs text-[#5d4037] leading-relaxed font-medium">
+                                💡 본선 진출국은 <strong>푸른색</strong>, 진출 실패국은 <strong>상아색</strong>입니다.<br>
+                                지도에서 선택한 국가는 <strong>어두운 갈색</strong>으로, 같은 조에 편성된 상대 국가는 <strong>청록색</strong>으로 표시됩니다.
+                            </p>
+                        </div>
+                    </div>
+                `;
+            } else if (currentMode === 'escape') {
+                let escapeHtml = '';
+                const mapContainer = document.getElementById('map-container');
+                const panelContainer = document.getElementById('panel-container');
+                
+                // 맵 클릭 문제인지 확인하여 지도 노출 여부 결정
+                const isMapClick = escapeState === 'playing' && escapeContent[escapeStoryStep] && escapeContent[escapeStoryStep].qType === 'map_click';
+                
+                if (isMapClick) {
+                    mapContainer.style.display = 'block';
+                    panelContainer.className = 'w-full h-[55%] lg:w-2/5 lg:h-full bg-white overflow-y-auto relative flex-shrink-0 lg:flex-shrink transition-all duration-500 bg-[url(\'https://www.transparenttextures.com/patterns/aged-paper.png\')]';
+                    setTimeout(() => window.dispatchEvent(new Event('resize')), 50);
+                } else {
+                    mapContainer.style.display = 'none';
+                    panelContainer.className = 'w-full h-full bg-white overflow-y-auto relative flex-shrink-0 transition-all duration-500 bg-[url(\'https://www.transparenttextures.com/patterns/aged-paper.png\')]';
+                }
+
+                if(escapeState === 'login') {
+                    escapeHtml = `
+                        <div class="flex flex-col items-center justify-center w-full max-w-4xl mx-auto z-10 text-center">
+                            <div class="w-20 h-20 bg-amber-800 text-stone-50 rounded-full flex items-center justify-center mb-6 shadow-2xl border-4 border-amber-600/50 backdrop-blur-sm mx-auto">
+                                <i class="fas fa-door-closed text-3xl"></i>
+                            </div>
+                            <h2 class="text-4xl lg:text-5xl font-black text-amber-400 mb-4 tracking-widest drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)]">미지의 대륙 탐험</h2>
+                            <p class="text-lg text-stone-200 font-bold mb-10 drop-shadow-md">아메리카 대륙의 12개 관문을 통과하고<br>학급 최고의 탐험가가 되세요!</p>
+                            
+                            <div class="w-full max-w-lg mx-auto bg-[#fdfbf7]/95 backdrop-blur-md p-8 rounded-2xl border-4 border-amber-900/40 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+                                <div class="mb-5 text-left">
+                                    <label class="block text-sm font-bold text-amber-900 mb-2">소속 학급</label>
+                                    <select id="esc-class" class="w-full bg-white border-2 border-amber-900/20 text-stone-900 rounded-xl p-4 font-bold focus:outline-none focus:border-amber-700 focus:ring-2 focus:ring-amber-700/50 transition-all shadow-inner">
+                                        <option value="" disabled selected>반을 선택하세요</option>
+                                        ${[1,2,3,4,5,6,7,8].map(i=> `<option value="${i}반">${i}반</option>`).join('')}
+                                    </select>
+                                </div>
+                                <div class="mb-8 text-left">
+                                    <label class="block text-sm font-bold text-amber-900 mb-2">탐험가 실명</label>
+                                    <input type="text" id="esc-name" placeholder="이름을 입력하세요" class="w-full bg-white border-2 border-amber-900/20 text-stone-900 rounded-xl p-4 font-bold focus:outline-none focus:border-amber-700 focus:ring-2 focus:ring-amber-700/50 transition-all shadow-inner">
+                                </div>
+                                <p id="login-error" class="text-sm font-bold text-red-600 mb-4 hidden"></p>
+                                <button onclick="beginEscapeRoom()" class="w-full py-4 bg-amber-800 text-white font-black text-lg rounded-xl hover:bg-amber-900 transition-colors shadow-lg border border-amber-700">
+                                    탐험 시작하기
+                                </button>
+                                <button onclick="showLeaderboard()" class="w-full mt-4 py-4 bg-white border-2 border-amber-900/20 text-amber-900 font-bold text-base rounded-xl hover:bg-amber-50 transition-colors">
+                                    <i class="fas fa-trophy text-amber-500 mr-2"></i> 학급 랭킹 보기
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                } else if(escapeState === 'story') {
+                    const data = escapeContent[escapeStoryStep];
+                    escapeHtml = `
+                        <div class="text-center w-full max-w-4xl mx-auto bg-[#fdfbf7]/95 p-10 lg:p-14 rounded-3xl border-4 border-amber-900/40 shadow-[0_20px_50px_rgba(0,0,0,0.5)] bg-[url('https://www.transparenttextures.com/patterns/aged-paper.png')] z-10">
+                            <h3 class="text-3xl lg:text-4xl font-black text-amber-900 mb-8">${data.title}</h3>
+                            <p class="text-lg lg:text-2xl text-stone-800 leading-relaxed font-bold mb-12 break-keep">${data.text}</p>
+                            <button onclick="nextEscapeStep()" class="px-12 py-4 bg-amber-800 text-white font-bold rounded-xl hover:bg-amber-900 transition-colors shadow-lg text-lg border border-amber-700">
+                                ${data.btn} <i class="fas fa-arrow-right ml-2"></i>
+                            </button>
+                        </div>
+                    `;
+                } else if(escapeState === 'playing') {
+                    const data = escapeContent[escapeStoryStep];
+                    let qNum = 0;
+                    for(let i=0; i<=escapeStoryStep; i++) if(escapeContent[i].type==='quiz') qNum++;
+
+                    let inputHtml = '';
+                    let submitBtnHtml = '';
+                    
+                    if (data.qType === 'map_click') {
+                        inputHtml = `
+                            <div class="w-full max-w-md mx-auto text-center p-4 bg-amber-100/80 border-2 border-amber-400 rounded-xl animate-pulse shadow-sm mb-6">
+                                <span class="text-amber-900 font-bold text-lg"><i class="fas fa-hand-pointer mr-2"></i>지도에서 알맞은 국가를 찾아 클릭하세요!</span>
+                            </div>
+                        `;
+                    } else if(data.qType === 'subjective') {
+                        inputHtml = `
+                            <input type="text" id="esc-input-${escapeStoryStep}" placeholder="정답 입력..." class="w-full max-w-md mx-auto text-center text-2xl lg:text-3xl font-black p-4 border-b-4 border-amber-900/30 bg-transparent focus:outline-none focus:border-amber-800 text-stone-900 mb-6 placeholder-stone-400 transition-colors block">
+                        `;
+                        submitBtnHtml = `
+                            <div class="mt-auto pt-8">
+                                <button onclick="submitEscapeAnswer(${escapeStoryStep})" class="w-full max-w-md mx-auto py-4 bg-amber-800 text-white font-bold text-xl rounded-xl hover:bg-amber-900 transition-colors shadow-lg block border border-amber-700">
+                                    정답 제출
+                                </button>
+                            </div>
+                        `;
+                    } else {
+                        inputHtml = `<div class="space-y-3 mb-6 w-full max-w-md mx-auto text-left">`;
+                        data.opts.forEach((opt, idx) => {
+                            inputHtml += `
+                                <label class="flex items-center p-4 bg-white/80 border-2 border-amber-900/20 rounded-xl cursor-pointer hover:bg-amber-100 transition-colors shadow-sm">
+                                    <input type="radio" name="esc-opt-${escapeStoryStep}" value="${idx+1}" class="w-6 h-6 text-amber-700 bg-white border-amber-400 focus:ring-amber-800">
+                                    <span class="ml-4 text-lg font-bold text-stone-800">${idx+1}. ${opt}</span>
+                                </label>
+                            `;
+                        });
+                        inputHtml += `</div>`;
+                        submitBtnHtml = `
+                            <div class="mt-auto pt-8">
+                                <button onclick="submitEscapeAnswer(${escapeStoryStep})" class="w-full max-w-md mx-auto py-4 bg-amber-800 text-white font-bold text-xl rounded-xl hover:bg-amber-900 transition-colors shadow-lg block border border-amber-700">
+                                    정답 제출
+                                </button>
+                            </div>
+                        `;
+                    }
+
+                    escapeHtml = `
+                        <div class="flex flex-col h-full w-full max-w-4xl mx-auto z-10">
+                            <div class="w-full flex justify-between items-center mb-8 border-b-2 border-stone-400/30 pb-4">
+                                <div>
+                                    <span class="block text-xs font-bold tracking-widest text-amber-400 uppercase drop-shadow-md">ESCAPE ROOM</span>
+                                    <span class="text-xl lg:text-2xl text-white font-black drop-shadow-md">관문 ${qNum} / 12</span>
+                                </div>
+                                <div class="text-right bg-stone-900/80 px-4 py-2 rounded-xl border border-amber-500/30 shadow-lg flex items-center gap-3 backdrop-blur-md">
+                                    <i class="fas fa-stopwatch text-red-500 text-xl animate-pulse"></i>
+                                    <span id="esc-live-timer" class="text-xl lg:text-2xl font-mono font-bold text-red-400 w-28 text-right">00:00.00</span>
+                                </div>
+                            </div>
+                            
+                            <div id="esc-wrap-${escapeStoryStep}" class="flex-1 w-full bg-[#fdfbf7]/95 border-4 border-amber-900/40 rounded-3xl p-8 lg:p-12 shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex flex-col justify-center text-center relative bg-[url('https://www.transparenttextures.com/patterns/aged-paper.png')]">
+                                <div class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-amber-800 text-white w-16 h-16 rounded-full flex items-center justify-center font-bold shadow-xl text-2xl border-4 border-[#fdfbf7]"><i class="fas fa-key"></i></div>
+                                
+                                <h3 class="text-xl lg:text-2xl font-black text-stone-800 leading-loose mb-10 break-keep">${data.q}</h3>
+                                
+                                ${inputHtml}
+                                
+                                <p id="esc-err-${escapeStoryStep}" class="text-sm font-bold text-red-600 min-h-[1.5rem] mb-6"></p>
+                                
+                                ${submitBtnHtml}
+                            </div>
+                        </div>
+                    `;
+                } else if(escapeState === 'result') {
+                    escapeHtml = `
+                        <div class="flex flex-col items-center justify-center w-full max-w-4xl mx-auto z-10 text-center">
+                            <div class="w-28 h-28 bg-amber-400 text-stone-900 rounded-full flex items-center justify-center mb-8 shadow-[0_0_30px_rgba(251,191,36,0.5)] border-4 border-amber-200">
+                                <i class="fas fa-compass text-6xl"></i>
+                            </div>
+                            <h2 class="text-5xl lg:text-6xl font-black text-amber-400 mb-4 tracking-tight drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)]">탈출 성공!</h2>
+                            <p class="text-xl text-stone-200 font-bold mb-10 drop-shadow-md">모든 관문을 통과하고 아메리카 대륙의 마스터가 되었습니다.</p>
+                            
+                            <div class="w-full max-w-md bg-[#fdfbf7]/95 p-8 rounded-2xl border-4 border-amber-900/40 shadow-2xl mb-8 bg-[url('https://www.transparenttextures.com/patterns/aged-paper.png')] mx-auto">
+                                <span class="block text-sm font-bold text-amber-900 mb-2">최종 기록</span>
+                                <div class="text-5xl lg:text-6xl font-mono font-black text-red-700 mb-6 drop-shadow-sm">${formatTime(escapeTimeElapsed)}</div>
+                                <span class="inline-block text-base font-bold text-stone-100 bg-stone-800 px-6 py-2 rounded-full border-2 border-stone-600 shadow-inner">${escapeClass} ${escapeName}</span>
+                            </div>
+
+                            <button onclick="showLeaderboard()" class="w-full max-w-md mx-auto py-4 bg-amber-800 text-white font-bold text-xl rounded-xl hover:bg-amber-900 transition-colors shadow-lg border border-amber-700">
+                                <i class="fas fa-list-ol mr-2"></i> 학급 랭킹 확인
+                            </button>
+                        </div>
+                    `;
+                } else if(escapeState === 'leaderboard') {
+                    let rankings = window.globalEscapeRankings || [];
+                    let targetClass = escapeClass || '1반'; 
+                    
+                    // 해당 반 학생들만 추려서 시간순(오름차순) 정렬
+                    rankings = rankings.filter(r => r.class === targetClass).sort((a,b) => a.timeMs - b.timeMs);
+                    
+                    let listHtml = '';
+                    if(!window.isFirebaseReady && rankings.length === 0) {
+                        listHtml = `<p class="text-center text-lg font-bold text-red-600 py-16"><i class="fas fa-wifi mb-2 text-2xl block"></i>서버가 연결되지 않았습니다.<br><span class="text-sm text-stone-500 font-medium mt-2 block">관리자 설정이 필요합니다.</span></p>`;
+                    } else if(rankings.length === 0) {
+                        listHtml = `<p class="text-center text-lg font-bold text-stone-400 py-16">아직 등록된 기록이 없습니다.</p>`;
+                    } else {
+                        rankings.forEach((r, idx) => {
+                            let rankIcon = `<span class="w-10 h-10 rounded-full bg-stone-200 text-stone-700 flex items-center justify-center text-base font-black shadow-inner border border-stone-300">${idx+1}</span>`;
+                            if(idx===0) rankIcon = `<i class="fas fa-crown text-yellow-500 text-4xl drop-shadow-md"></i>`;
+                            else if(idx===1) rankIcon = `<i class="fas fa-medal text-stone-400 text-4xl drop-shadow-md"></i>`;
+                            else if(idx===2) rankIcon = `<i class="fas fa-medal text-orange-400 text-4xl drop-shadow-md"></i>`;
+
+                            listHtml += `
+                                <div class="flex justify-between items-center p-4 bg-white/90 border-2 border-amber-900/10 rounded-xl mb-3 shadow-sm hover:shadow-md transition-shadow">
+                                    <div class="flex items-center gap-5">
+                                        <div class="w-12 flex justify-center">${rankIcon}</div>
+                                        <span class="font-black text-stone-800 text-xl">${r.name}</span>
+                                    </div>
+                                    <span class="font-mono font-black text-red-600 text-2xl">${r.timeStr}</span>
+                                </div>
+                            `;
+                        });
+                    }
+
+                    escapeHtml = `
+                        <div class="flex flex-col h-full w-full max-w-4xl mx-auto z-10 bg-[#fdfbf7]/95 border-4 border-amber-900/40 rounded-3xl p-6 lg:p-10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] bg-[url('https://www.transparenttextures.com/patterns/aged-paper.png')] relative">
+                            
+                            <!-- 패스워드 입력 모달 (기본 숨김) -->
+                            <div id="password-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-stone-900/80 backdrop-blur-sm rounded-3xl">
+                                <div class="bg-white p-6 lg:p-8 rounded-2xl shadow-2xl w-80 text-center border-4 border-amber-900/40">
+                                    <h3 class="text-xl font-black text-amber-900 mb-4"><i class="fas fa-lock mr-2"></i>관리자 권한</h3>
+                                    <p class="text-sm text-stone-600 mb-4 font-bold">전체 기록을 초기화하시려면<br>암호를 입력하세요.</p>
+                                    <input type="password" id="reset-password-input" class="w-full border-2 border-stone-200 rounded-lg p-3 text-center mb-4 focus:outline-none focus:border-amber-700 font-bold" placeholder="암호 입력">
+                                    <p id="password-error" class="text-xs text-red-600 font-bold mb-4 hidden">암호가 일치하지 않습니다.</p>
+                                    <div class="flex gap-2">
+                                        <button onclick="cancelReset()" class="flex-1 py-3 bg-stone-200 text-stone-700 font-bold rounded-xl hover:bg-stone-300 transition-colors">취소</button>
+                                        <button onclick="confirmResetPassword()" class="flex-1 py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition-colors shadow-md">초기화</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-col md:flex-row justify-between items-center mb-8 border-b-4 border-amber-900/20 pb-6 gap-4">
+                                <h2 class="text-3xl lg:text-4xl font-black text-amber-900"><i class="fas fa-trophy text-amber-500 mr-3 drop-shadow-md"></i>명예의 전당</h2>
+                                <div class="flex items-center gap-2">
+                                    <button onclick="handleResetClick()" class="bg-white border-2 border-amber-900/20 text-[#5d4037] hover:text-red-600 hover:border-red-200 hover:bg-red-50 rounded-xl px-4 py-3 font-bold text-sm shadow-sm transition-all cursor-pointer whitespace-nowrap">
+                                        <i class="fas fa-trash-alt mr-1"></i>기록 초기화
+                                    </button>
+                                    <select id="esc-rank-filter" onchange="escapeClass=this.value; showLeaderboard();" class="bg-white border-2 border-amber-900/20 text-stone-900 rounded-xl px-4 py-3 font-bold text-base focus:outline-none focus:ring-2 focus:ring-amber-700 shadow-sm cursor-pointer">
+                                        ${[1,2,3,4,5,6,7,8].map(i=> `<option value="${i}반" ${targetClass==i+'반'?'selected':''}>${i}반</option>`).join('')}
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="flex-1 overflow-y-auto pr-4 custom-scrollbar">
+                                ${listHtml}
+                            </div>
+                            
+                            <div class="mt-8 pt-6 border-t-4 border-amber-900/20">
+                                <button onclick="escapeState='login'; renderPanel();" class="w-full py-4 bg-white border-2 border-amber-900/30 text-amber-900 font-black text-xl rounded-xl hover:bg-amber-50 transition-colors shadow-sm">
+                                    방탈출 홈으로
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                const justifyClass = isMapClick ? 'justify-start' : 'justify-center';
+                panel.innerHTML = `
+                    <div class="relative min-h-full w-full bg-cover bg-center bg-fixed flex flex-col items-center ${justifyClass} p-6 lg:p-10" style="background-image: url('https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?q=80&w=1920&auto=format&fit=crop');">
+                        <div class="absolute inset-0 bg-stone-900/75 backdrop-blur-[2px]"></div>
+                        ${escapeHtml}
+                    </div>
+                `;
+
+            } else if (currentMode === 'quiz') {
+                const targetId = quizQuestions[currentQIndex];
+                const targetKo = countryInfo[targetId].ko;
+
+                panel.innerHTML = `
+                    <div class="p-5 lg:p-8 h-full flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-end border-b-2 border-[#e6e2d8] pb-3 lg:pb-4 mb-5 lg:mb-6">
+                                <div>
+                                    <span class="block text-[10px] lg:text-xs font-bold tracking-widest text-[#a1887f] uppercase mb-1">GEOGRAPHY QUIZ</span>
+                                    <span class="text-xs lg:text-sm text-[#3e2723] font-bold">문제 ${currentQIndex + 1} / ${quizQuestions.length}</span>
+                                </div>
+                                <div class="text-right">
+                                    <span class="block text-[10px] lg:text-xs font-bold text-[#1565c0] uppercase tracking-widest mb-1">SCORE</span>
+                                    <span class="text-lg lg:text-xl font-bold text-[#1565c0]">${score}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="w-full bg-[#e6e2d8] rounded-full h-1.5 lg:h-2 mb-2">
+                                <div id="quiz-time-bar" class="bg-green-600 h-1.5 lg:h-2 rounded-full transition-all duration-1000 ease-linear" style="width: 100%"></div>
+                            </div>
+                            <div class="text-right text-[10px] lg:text-xs font-bold text-[#8d6e63] mb-5 lg:mb-8">남은 시간: <span id="quiz-time-text" class="text-[#3e2723] text-sm lg:text-base">10</span>초</div>
+                            
+                            <div class="text-center bg-white py-8 lg:py-10 px-4 rounded-xl border-2 border-[#e6e2d8] shadow-sm relative overflow-hidden">
+                                <div class="absolute -left-4 -bottom-4 opacity-5 text-8xl"><i class="fas fa-globe-americas"></i></div>
+                                <span class="block text-xs lg:text-sm font-bold text-[#8d6e63] mb-3 lg:mb-4 relative z-10">👇 10초 안에 아래 국가를 클릭하세요!</span>
+                                <h2 class="text-4xl lg:text-5xl font-adventure font-bold text-[#3e2723] tracking-tight relative z-10">${targetKo}</h2>
+                            </div>
+                        </div>
+                        
+                        <div id="quiz-feedback" class="py-4 text-center opacity-0 transition-opacity duration-300"></div>
+                    </div>
+                `;
+            } else if (currentMode === 'result') {
+                panel.innerHTML = `
+                    <div class="p-5 lg:p-8 flex flex-col h-full items-center justify-center text-center">
+                        <div class="w-12 h-12 lg:w-16 lg:h-16 bg-white border-2 border-[#e6e2d8] rounded-full flex items-center justify-center mb-4 shadow-sm">
+                            <i class="fas fa-check text-xl lg:text-2xl text-[#2e7d32]"></i>
+                        </div>
+                        <span class="block text-[10px] lg:text-xs font-bold tracking-widest text-[#a1887f] uppercase mb-2">ASSESSMENT COMPLETE</span>
+                        <h2 class="text-2xl lg:text-3xl font-adventure font-bold text-[#3e2723] mb-6 lg:mb-8">영토 위치 퀴즈 완료</h2>
+                        
+                        <div class="mb-8 lg:mb-12 bg-white w-full py-6 lg:py-8 rounded-xl border-2 border-[#e6e2d8] shadow-sm">
+                            <span class="block text-xs lg:text-sm font-bold text-[#8d6e63] mb-2">최종 점수</span>
+                            <div class="text-5xl lg:text-7xl font-bold text-[#1565c0]">${score}</div>
+                        </div>
+
+                        <div class="w-full space-y-3 max-w-xs mx-auto">
+                            <button onclick="switchMode('study')" class="w-full py-3 border-2 border-[#d7ccc8] text-[#5d4037] text-xs lg:text-sm font-bold hover:bg-[#e6e2d8] transition-colors rounded-lg shadow-sm">
+                                탐색 모드로 돌아가기
+                            </button>
+                            <button onclick="switchMode('quiz')" class="w-full py-3 bg-[#3e2723] text-white text-xs lg:text-sm font-bold hover:bg-[#1f1209] transition-colors rounded-lg shadow-md">
+                                다시 도전하기
+                            </button>
+                        </div>
+                    </div>
                 `;
             }
         }
