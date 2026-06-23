@@ -471,13 +471,12 @@
             g.append("text").attr("x", projection([-75, 14.5])[0]).attr("y", projection([-75, 14.5])[1]).text("카리브해")
              .style("fill", oceanStyle.fill).style("font-size", "12px").style("font-weight", "500").style("letter-spacing", "4px").style("opacity", oceanStyle.opacity).attr("text-anchor", "middle").style("pointer-events", "none");
 
-            // 적도
+            // 적도 (실선)
             g.append("path")
              .datum({type: "LineString", coordinates: [[-140, 0], [-30, 0]]})
              .attr("d", pathGenerator)
              .attr("stroke", "#dc2626")
              .attr("stroke-width", 1.5)
-             .attr("stroke-dasharray", "4,4")
              .attr("fill", "none")
              .style("opacity", 0.6)
              .style("pointer-events", "none");
@@ -487,13 +486,69 @@
              .attr("y", projection([-140, 0])[1])
              .text("적도 (0°)")
              .style("fill", "#dc2626")
-             .style("font-size", "12px")
+             .style("font-size", "11px")
              .style("font-weight", "700")
              .style("letter-spacing", "1px")
              .attr("text-anchor", "end")
              .attr("dominant-baseline", "central")
              .style("opacity", 0.8)
              .style("pointer-events", "none");
+
+            // 북회귀선 (점선)
+            g.append("path")
+             .datum({type: "LineString", coordinates: [[-140, 23.5], [-30, 23.5]]})
+             .attr("class", "tropic-element")
+             .attr("d", pathGenerator)
+             .attr("stroke", "#dc2626")
+             .attr("stroke-width", 1)
+             .attr("stroke-dasharray", "4,4")
+             .attr("fill", "none")
+             .style("opacity", 0.6)
+             .style("pointer-events", "none")
+             .style("display", currentMode === 'study' ? "block" : "none");
+
+            g.append("text")
+             .attr("class", "tropic-element")
+             .attr("x", projection([-140, 23.5])[0] - 8)
+             .attr("y", projection([-140, 23.5])[1])
+             .text("북회귀선 (23.5°N)")
+             .style("fill", "#dc2626")
+             .style("font-size", "11px")
+             .style("font-weight", "700")
+             .style("letter-spacing", "1px")
+             .attr("text-anchor", "end")
+             .attr("dominant-baseline", "central")
+             .style("opacity", 0.8)
+             .style("pointer-events", "none")
+             .style("display", currentMode === 'study' ? "block" : "none");
+
+            // 남회귀선 (점선)
+            g.append("path")
+             .datum({type: "LineString", coordinates: [[-140, -23.5], [-30, -23.5]]})
+             .attr("class", "tropic-element")
+             .attr("d", pathGenerator)
+             .attr("stroke", "#dc2626")
+             .attr("stroke-width", 1)
+             .attr("stroke-dasharray", "4,4")
+             .attr("fill", "none")
+             .style("opacity", 0.6)
+             .style("pointer-events", "none")
+             .style("display", currentMode === 'study' ? "block" : "none");
+
+            g.append("text")
+             .attr("class", "tropic-element")
+             .attr("x", projection([-140, -23.5])[0] - 8)
+             .attr("y", projection([-140, -23.5])[1])
+             .text("남회귀선 (23.5°S)")
+             .style("fill", "#dc2626")
+             .style("font-size", "11px")
+             .style("font-weight", "700")
+             .style("letter-spacing", "1px")
+             .attr("text-anchor", "end")
+             .attr("dominant-baseline", "central")
+             .style("opacity", 0.8)
+             .style("pointer-events", "none")
+             .style("display", currentMode === 'study' ? "block" : "none");
 
             const organicLine = d3.line().curve(d3.curveBasis).x(d => projection(d)[0]).y(d => projection(d)[1]);
             const organicPolygon = d3.line().curve(d3.curveBasisClosed).x(d => projection(d)[0]).y(d => projection(d)[1]);
@@ -607,6 +662,7 @@
             showTerrain = false;
             d3.selectAll('.terrain-feature').style('display', 'none');
             d3.selectAll('.terrain-active').classed('terrain-active', false);
+            d3.selectAll('.tropic-element').style('display', 'none');
             document.getElementById('layer-toggle-text').innerText = '자연환경 보기';
             document.getElementById('layer-toggle-icon').className = 'fas fa-layer-group text-stone-500 mr-1';
             
@@ -643,11 +699,13 @@
 
             if (mode === 'study') {
                 layerBtn.style.display = 'block';
+                d3.selectAll('.tropic-element').style('display', 'block');
             } else {
                 layerBtn.style.display = 'none';
                 showTerrain = false;
                 d3.selectAll('.terrain-feature').style('display', 'none');
                 d3.selectAll('.terrain-active').classed('terrain-active', false);
+                d3.selectAll('.tropic-element').style('display', 'none');
                 document.getElementById('layer-toggle-text').innerText = '자연환경 보기';
                 document.getElementById('layer-toggle-icon').className = 'fas fa-layer-group text-stone-500 mr-1';
             }
