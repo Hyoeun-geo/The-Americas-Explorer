@@ -111,6 +111,7 @@
         .terrain-shape-plain { fill: #4ade80; opacity: 0.5; stroke: #166534; stroke-width: 1.5px; stroke-dasharray: 4,4; }
         .terrain-shape-highland { fill: #f59e0b; opacity: 0.5; stroke: #92400e; stroke-width: 1.5px; stroke-dasharray: 4,4; }
         .terrain-shape-desert { fill: #fde047; opacity: 0.7; stroke: #ca8a04; stroke-width: 1.5px; stroke-dasharray: 4,4; }
+        .terrain-shape-isthmus { fill: rgba(244, 63, 94, 0.1); opacity: 0.9; stroke: #e11d48; stroke-width: 2px; stroke-dasharray: 4,4; }
 
         /* 활성화(클릭) 시 Shape 스타일 */
         .terrain-active.terrain-shape-mountain { stroke: #78350f; opacity: 0.8; stroke-width: 20px; }
@@ -119,6 +120,7 @@
         .terrain-active.terrain-shape-plain { fill: #22c55e; opacity: 0.8; }
         .terrain-active.terrain-shape-highland { fill: #d97706; opacity: 0.8; }
         .terrain-active.terrain-shape-desert { fill: #eab308; opacity: 0.9; }
+        .terrain-active.terrain-shape-isthmus { fill: rgba(225, 29, 72, 0.3); opacity: 1; stroke: #be123c; stroke-width: 3.5px; }
 
         /* 텍스트 라벨 스타일 */
         .terrain-text {
@@ -136,6 +138,7 @@
         .terrain-text-plain { fill: #14532d; }
         .terrain-text-highland { fill: #92400e; }
         .terrain-text-desert { fill: #a16207; }
+        .terrain-text-isthmus { fill: #9f1239; }
 
         .terrain-active.terrain-text {
             font-weight: 900;
@@ -292,6 +295,10 @@
             { id: "t-brazilhighland", groupId: "g-brazilhighland", name: "브라질고원", type: "highland", geometry: { type: "Polygon", coordinates: [[[-48, -4], [-40, -5], [-36, -8], [-40, -18], [-46, -25], [-52, -28], [-54, -22], [-51, -15], [-48, -4]]] }, labelCoords: [-46, -15], labelRotate: 0, desc: "브라질 면적의 절반 이상을 차지하는 거대한 고원 지대로, 철광석이 풍부하며 커피 재배가 활발합니다." },
             { id: "t-uyuni", groupId: "g-uyuni", name: "우유니 사막", type: "desert", geometry: { type: "Polygon", coordinates: [[[-69.0, -19.0], [-66.5, -18.5], [-65.0, -19.5], [-65.0, -21.5], [-66.5, -22.0], [-69.0, -21.5]]] }, labelCoords: [-67.0, -20.2], labelRotate: 0, desc: "볼리비아 고산지대에 위치한 세계 최대의 소금 사막입니다. 우기에는 얕은 물이 고여 거대한 거울처럼 변합니다." },
             
+            // 핵심 경계선 (추가)
+            { id: "t-riogrande", groupId: "g-riogrande", name: "리오그란데강", type: "river", geometry: { type: "LineString", coordinates: [[-106.5, 31.5], [-104.5, 29.5], [-102.5, 29.8], [-101.0, 29.8], [-99.5, 27.5], [-97.5, 26.0]] }, labelCoords: [-100, 26.5], labelRotate: -25, desc: "미국과 멕시코의 국경을 흐르는 강입니다. 영어를 주로 사용하는 북쪽의 <b>'앵글로아메리카'</b>와, 에스파냐어/포르투갈어를 주로 사용하는 남쪽의 <b>'라틴아메리카'</b>를 구분하는 매우 중요한 <b>문화적 경계선</b>입니다." },
+            { id: "t-panama-isthmus", groupId: "g-panama-isthmus", name: "파나마 지협", type: "isthmus", geometry: { type: "Polygon", coordinates: [[[-80.0, 9.7], [-78.8, 8.5], [-80.0, 7.3], [-81.2, 8.5], [-80.0, 9.7]]] }, labelCoords: [-74.5, 10.5], labelRotate: 0, desc: "거대한 두 대륙을 연결하는 좁은 땅(지협)입니다. 이곳을 기준으로 아메리카 대륙을 <b>'북아메리카'</b>와 <b>'남아메리카'</b>로 나누며, 이는 <b>자연적(위치적) 경계선</b> 역할을 합니다. 태평양과 대서양을 가장 빠르게 잇는 파나마 운하가 위치해 있습니다." },
+
             // 미시시피 강
             { id: "t-mississippi-main", groupId: "g-mississippi", name: "미시시피강", type: "river", geometry: { type: "LineString", coordinates: [[-93.2, 45.0], [-91.0, 42.0], [-90.2, 38.6], [-90.5, 34.0], [-91.0, 31.5], [-89.6, 29.5]] }, labelCoords: [-91, 38], labelRotate: 80, desc: "북아메리카 중앙을 남쪽으로 흘러 멕시코만으로 들어가는 거대한 강으로, 미국 농업과 수운 교통의 핵심 역할을 합니다." },
             { id: "t-mississippi-trib1", groupId: "g-mississippi", name: "", type: "river-tributary", geometry: { type: "LineString", coordinates: [[-112, 46], [-106, 47], [-100, 43], [-95, 39], [-90.2, 38.6]] }, desc: "" },
@@ -1013,6 +1020,7 @@
                     else if(info.type === 'plain') { typeName = "평원/분지"; icon = "fa-leaf text-green-600"; }
                     else if(info.type === 'highland') { typeName = "고원"; icon = "fa-image text-amber-600"; }
                     else if(info.type === 'desert') { typeName = "사막"; icon = "fa-sun text-yellow-600"; }
+                    else if(info.type === 'isthmus') { typeName = "지협 (경계)"; icon = "fa-map-signs text-rose-600"; }
                     
                     panel.innerHTML = `
                         <div class="p-8">
